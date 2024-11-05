@@ -1,3 +1,4 @@
+function run_benchmarking(Params):
 % Do NBS-based method benchmarking (cNBS, TFCE, etc)
 %
 % main outputs:
@@ -314,4 +315,6 @@ save(output_filename,'edge_stats_all','cluster_stats_all','pvals_all','FWER','ed
 previous_results_filename__already_loaded=output_filename;
 
 end
+end
+
 end
