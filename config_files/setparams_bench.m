@@ -85,8 +85,6 @@ omnibus_type_gt='Multidimensional_all_edges';
 use_preaveraged_constrained=0; % 1 | 0
                             % Only used for cNBS and Omnibus cNBS
 
-
-
 %%%%% DEVELOPERS ONLY %%%%%
 % Use a small subset of permutations for faster development -- inappropriate for inference
 
