@@ -2,6 +2,8 @@
     % Power Calculator
 %%%%%
 
+% Change for test
+
 a = 10;
 vars = who;       % Get a list of all variable names in the workspace
 vars(strcmp(vars, 'data_matrix')) = [];  % Remove the variable you want to keep from the list
