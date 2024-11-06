@@ -1,0 +1,17 @@
+%%%%%
+    % Power Calculator
+%%%%%
+
+clear;
+clc;
+
+mat = load('/data/s_hcp_fc_noble_tasks.mat');
+
+return;
+
+[current_path,~,~]=fileparts(mfilename('fullpath')); % assuming NBS_benchmarking is current folder
+addpath(genpath(current_path));
+
+Params = setparams();
+RepParams = setup_benchmarking(Params, false);
+
