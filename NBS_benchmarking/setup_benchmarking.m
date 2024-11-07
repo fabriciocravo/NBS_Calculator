@@ -18,7 +18,7 @@ end
 
 % set ground truth parameters
 if do_gt
-    RepParams.do_ground_truth = 1
+    RepParams.do_ground_truth = 1;
     RepParams.task1=task_gt;
     RepParams.do_TPR=1;
     %use_both_tasks=1;
@@ -33,7 +33,7 @@ if do_gt
         warning('Not performing a contrast between two tasks. Specify ''use_both_tasks=1'' to match results from Levels of Inference study.')
     end
 else
-    RepParams.do_ground_truth=0;
+    RepParams.do_ground_truth = 0;
 end
 
 % special setup for nonparametric FDR (part of classic NBS toolbox) and parametric FDR and Bonferroni (newly added here)  since can't run it using cluster_stat_type
@@ -74,7 +74,7 @@ end
     
 %% Get subjects IDs, num subjects, num nodes
 
-% get subject task1 IDs
+% get subject task1 IDs and matrix data
 RepParams.task1_IDs = RepParams.data.brain_data.(RepParams.task1).sub_ids;
 
 % if do_TPR
@@ -86,13 +86,13 @@ if RepParams.use_both_tasks % doing a paired sample test
     RepParams.task2_IDs = RepParams.data.brain_data.(RepParams.task2).sub_ids;
     
     % compare task1 w task2
-    fprintf(['Comparing subject IDs from from task1:\n(',RepParams.task1,')\n' ...
-            'with IDs from task2:\n(',RepParams.task2,').\n']);
+    %fprintf(['Comparing subject IDs from from task1:\n(',RepParams.task1,')\n' ...
+    %        'with IDs from task2:\n(',RepParams.task2,').\n']);
     RepParams.subIDs = intersect(RepParams.task1_IDs,RepParams.task2_IDs);
     %subIDs=subIDs(2:end); % in case the first find is empty - TODO add a check here first - NEW should be fine now bc checking for empty in task1_IDs and task2_IDs AND explicitly checking for empty in intersection
 
 else % doing a one-sample test
-    fprintf(['Using subject IDs from from task1 (',RepParams.task2,').\n']);
+    %fprintf(['Using subject IDs from from task1 (',RepParams.task2,').\n']);
     RepParams.subIDs=RepParams.task1_IDs;
 end
 
@@ -107,24 +107,25 @@ end
 if RepParams.do_ground_truth
     RepParams.n_subs_subset=RepParams.n_subs;
 end
-% return; %TODO: TEMPORARY
 
-% Load one example matrix to get number of nodes and nets
-template_file=[RepParams.data_dir, RepParams.task1, '/', ...
-               RepParams.subIDs{1}, '_', RepParams.task1, RepParams.data_type_suffix];
-fprintf('Template file is: %s.\n', template_file);
-template=importdata(template_file);
+% This line extracts the number of nodes (voxels, areas) 
+% Do n_var*(n_var - 1)/2 for number of fc links
+RepParams.n_var = sum(RepParams.data.study_info.mask(:));
 
-RepParams.n_var = size(template, 1);
+if ~RepParams.use_preaveraged_constrained
+    RepParams.n_nodes = size(RepParams.data.study_info.mask, 1); 
+    % Extract mask from data here - Consider optimization in data structure
+    RepParams.triumask = RepParams.data.study_info.mask;
 
-if ~use_preaveraged_constrained
-    RepParams.n_nodes = RepParams.n_var; % assuming square
-    triumask = triu(true(size(template)), 1);
-
-    template_net = summarize_matrix_by_atlas(template(:,:,1),'suppressimg',1);
+    template_net = summarize_matrix_by_atlas(template,'suppressimg',1);
     RepParams.n_node_nets = size(template_net, 1); % square
-    trilmask_net = tril(true(n_node_nets)); % I know it's annoying to switch to tril here instead of triu, but summarize_matrix_by_atlas gives results in lower triangle (tril is my habit) while NBS uses triu...
+    trilmask_net = tril(true(n_node_nets)); 
+    % I know it's annoying to switch to tril here instead of triu, but summarize_matrix_by_atlas gives results in lower triangle (tril is my habit) while NBS uses triu...
 end
+
+disp('Hey')
+return;
+
 
 %% GROUND TRUTH ONLY: Pre-load and reorder data unless already specified to be loaded
 % note that for benchmarking (not ground truth), we load/reorder data during each repetition
@@ -256,6 +257,8 @@ if RepParams.do_ground_truth
 
 end
 
+% I CURRENTLY REVIEW UP TO HERE
+disp('Got here with no issues')
 
 %% Set up design matrix, contrasts, and (for cNBS) edge groups
 
@@ -266,7 +269,7 @@ if RepParams.use_both_tasks
         % set up design matrix for paired one-sample t-test
         % data should be organized: s1_gr1,s2_gr1, ... , sn-1_group2, sn_group2
         dmat = zeros(RepParams.n_subs_subset * 2, RepParams.n_subs_subset + 1);
-        dmat(1:(RepParams.n_subs_subset), 1)=1;
+        dmat(1:(RepParams.n_subs_subset), 1) = 1;
         dmat((RepParams.n_subs_subset + 1):end, 1) = -1;
 
         for i=1:RepParams.n_subs_subset
@@ -317,14 +320,13 @@ end
 
 
 % make edge groupings (for cNBS/SEA)
-if ~use_preaveraged_constrained % no need to reorder/pool
+if ~RepParams.use_preaveraged_constrained % no need to reorder/pool
     edge_groups = load_atlas_edge_groups(RepParams.n_nodes, RepParams.mapping_category);
     edge_groups = tril(edge_groups,-1);
     % TODO: in NBS function, should we require zero diag? Automatically clear diag? Something else?
 else
-    edge_groups=1:length(template)+1; % plus 1 because the script expects there to be a "0" (and will subsequently ignore..."
+    edge_groups=1:length(RepParams.triumask)+1; % plus 1 because the script expects there to be a "0" (and will subsequently ignore..."
 end
-
 
 %% Assign params to structures
 % Goal: should be able to run config file, load rep_params and UI from reference, and replicate reference results

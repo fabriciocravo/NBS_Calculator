@@ -1,4 +1,4 @@
-function [struct_data,mask]=structure_data(unstruct_data,varargin)
+function [struct_data,mask]=structure_data(unstruct_data, varargin)
 % restructure data that has been pulled out of a mask
 % varargin is for structure type. Use defaults if voxelwise or matrix. Otherwise, if 1-D, specify 'none'.
 %

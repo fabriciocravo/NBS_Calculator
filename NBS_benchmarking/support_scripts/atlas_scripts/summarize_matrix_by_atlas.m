@@ -1,4 +1,4 @@
-function [summary_matrix,summary_matrix_std]=summarize_matrix_by_atlas(mat,varargin)
+function [summary_matrix,summary_matrix_std]=summarize_matrix_by_atlas(mat, varargin)
 % load mask, take avg within edge pairs
 % IF WANT TO REORDER, MUST NOT ALREADY BE REORDERED!
 % inputs: mat
@@ -24,11 +24,13 @@ addParameter(p,'do_std',defaultdo_std,@isnumeric);
 addParameter(p,'atlascategory',defaultatlascategory,@ischar);
 addParameter(p,'datacategory',defaultdatacategory,@ischar);
 
-parse(p,varargin{:});
+parse(p, varargin{:});
 
 saveimg = p.Results.saveimg;
 suppressimg = p.Results.suppressimg;
-if saveimg; suppressimg = 0; end
+if saveimg 
+    suppressimg = 0; 
+end
 reorderimg = p.Results.reorderimg;
 do_edge_counts = p.Results.do_edge_counts;
 do_std = p.Results.do_std;
@@ -37,15 +39,14 @@ datacategory = p.Results.datacategory;
 
 clearvars p varargin
 
-
 %% Setup data
 
 % restructure and reorder
 if size(mat,1) ~= size(mat,2)
-   mat=structure_data(mat); 
+   mat = structure_data(mat); 
 end
 if reorderimg
-    mat=reorder_matrix_by_atlas(mat,atlascategory);
+    mat = reorder_matrix_by_atlas(mat,atlascategory);
 end
 
 % make mask
