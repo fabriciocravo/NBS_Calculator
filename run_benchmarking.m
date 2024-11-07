@@ -1,4 +1,4 @@
-function run_benchmarking(Params):
+function run_benchmarking(Params)
 % Do NBS-based method benchmarking (cNBS, TFCE, etc)
 %
 % main outputs:
