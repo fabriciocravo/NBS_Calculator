@@ -28,7 +28,7 @@ Params.output_dir='/Users/steph/Documents/data/mnt/NBS_benchmarking_results/';
 
 Params.task1='WM';         % 'EMOTION' | 'GAMBLING' | 'LANGUAGE' | 'MOTOR' | 'RELATIONAL' | 'SOCIAL' | 'WM' | 'REST'
                     % use any for TPR and 'REST' for FPR
-Params.task_gt='GAMBLING'; % for ground truth (can use truncated, e.g., 'REST_176frames')
+Params.task_gt='WM'; % for ground truth (can use truncated, e.g., 'REST_176frames')
 Params.task2='REST';       % 2nd task for FPR or TPR contrast (set 'REST2' for FPR)
 Params.subIDs_suffix='_subIDs.txt';        % see naming convention
 Params.data_type_suffix='_GSR_matrix.txt'; % see naming convention 
@@ -77,24 +77,28 @@ Params.nbs_method = 'Run NBS';       % 'Run NBS' (all procedures except edge-lev
 Params.nbs_test_stat = 't-test';     % 't-test' | 'one-sample' | 'F-test'
                             % Current model (see above design matrix) only designed for t-test
 Params.n_perms = 1000;               % recommend n_perms=5000 to appreciably reduce uncertainty of p-value estimation (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Randomise/Theory)
+Params.n_perms_gt = 1000;
 Params.tthresh_first_level = 3.1;    % t=3.1 corresponds with p=0.005-0.001 (DOF=10-1000)
                             % Only used if cluster_stat_type='Size'
 Params.pthresh_second_level = 0.05;  % FWER or FDR rate
-Params.cluster_stat_type = 'Size';   % cluster_stat_type (should be renamed stat_type) is required for all inference procedures except nonparametric edge-level
-                            % 'Parametric_Bonferroni' (edge-level + FWER correction; must set nbs_method=Run Parametric Edge-Level Correction)
-                            % 'Parametric_FDR' (edge+FDR; nbs_method=Run Parametric Edge-Level Correction)
-                            % 'Size' (cluster+FWER; nbs_method='Run NBS')
-                            % 'TFCE' (cluster+FWER; nbs_method='Run NBS')
-                            % 'Constrained' (predefined network+FDR; nbs_method='Run NBS')
-                            % 'Constrained_FWER' (predefined network+FWER; nbs_method='Run NBS')
-                            % 'Omnibus' (whole-brain; nbs_method='Run NBS')
-                            % 'SEA' (under construction) (predefined network; nbs_method='Run NBS')
+Params.cluster_stat_type = 'Size';   
+Params.stat_type_gt = 'Size';
+
+% cluster_stat_type (should be renamed stat_type) is required for all inference procedures except nonparametric edge-level
+% 'Parametric_Bonferroni' (edge-level + FWER correction; must set nbs_method=Run Parametric Edge-Level Correction)
+% 'Parametric_FDR' (edge+FDR; nbs_method=Run Parametric Edge-Level Correction)
+% 'Size' (cluster+FWER; nbs_method='Run NBS')
+% 'TFCE' (cluster+FWER; nbs_method='Run NBS')
+% 'Constrained' (predefined network+FDR; nbs_method='Run NBS')
+% 'Constrained_FWER' (predefined network+FWER; nbs_method='Run NBS')
+% 'Omnibus' (whole-brain; nbs_method='Run NBS')
+% 'SEA' (under construction) (predefined network; nbs_method='Run NBS')
 Params.cluster_size_type = 'Extent'; % 'Intensity' | 'Extent'
                             % Only used if cluster_stat_type='Size'
 Params.all_omnibus_types={'Multidimensional_cNBS'};
 Params.omnibus_type = 'Threshold_Positive';  % 'Threshold_Positive' | 'Threshold_Both_Dir' | 'Average_Positive' | 'Average_Both_Dir' | 'Multidimensional_cNBS' | 'Multidimensional_all_edges' 
                             % Only used if cluster_stat_type='Omnibus'
-Params.omnibus_type_gt='Multidimensional_all_edges';
+Params.omnibus_type_gt='Threshold_Positive';
 Params.use_preaveraged_constrained = 0; % 1 | 0
                             % Only used for cNBS and Omnibus cNBS
                  

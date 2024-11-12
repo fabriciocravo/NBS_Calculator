@@ -1,4 +1,4 @@
-function RepParams = setup_benchmarking(Params, do_gt)
+function [UI, RepParams] = setup_benchmarking(Params, do_gt)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % Setup for running NBS benchmarking
 % This will load data and set up the parameters needed to run NBS benchmarking
@@ -19,18 +19,18 @@ end
 % set ground truth parameters
 if do_gt
     RepParams.do_ground_truth = 1;
-    RepParams.task1=task_gt;
-    RepParams.do_TPR=1;
+    RepParams.task1 = RepParams.task_gt;
+    RepParams.do_TPR = 1;
     %use_both_tasks=1;
-    RepParams.cluster_stat_type=stat_type_gt;
+    RepParams.cluster_stat_type = RepParams.stat_type_gt;
     %cluster_stat_type='Size';
-    RepParams.omnibus_type=omnibus_type_gt;
-    RepParams.n_perms=n_perms_gt;
+    RepParams.omnibus_type = RepParams.omnibus_type_gt;
+    RepParams.n_perms = RepParams.n_perms_gt;
     %n_perms='1';
   
-    fprintf(['Setting params for ground truth (',cluster_stat_type,' + ',n_perms,' perm (1 perm is just to estimate t-stats)).  Will preload data from ',task1,'.\n']);
-    if ~use_both_tasks % temporary check that both tasks are being used
-        warning('Not performing a contrast between two tasks. Specify ''use_both_tasks=1'' to match results from Levels of Inference study.')
+    if ~RepParams.use_both_tasks % temporary check that both tasks are being used
+        warning(['Not performing a contrast between two tasks. ' ...
+            'Specify ''use_both_tasks=1'' to match results from Levels of Inference study.'])
     end
 else
     RepParams.do_ground_truth = 0;
@@ -53,6 +53,7 @@ if RepParams.use_both_tasks
                 'this differs from the intended use of these benchmarking scripts.']);
         else
             if RepParams.use_trimmed_rest
+                disp('Fix this too')
                 RepParams.task2=[RepParams.task2,'_',num2str(RepParams.n_frames.(task1)),'frames'];
                 if RepParams.do_TPR
                     warning('Using trimmed rest for power calculation.');
@@ -75,7 +76,7 @@ end
 %% Get subjects IDs, num subjects, num nodes
 
 % get subject task1 IDs and matrix data
-RepParams.task1_IDs = RepParams.data.brain_data.(RepParams.task1).sub_ids;
+RepParams.task1_IDs = RepParams.brain_data.(RepParams.task1).sub_ids;
 
 % if do_TPR
 if RepParams.use_both_tasks % doing a paired sample test
@@ -83,49 +84,46 @@ if RepParams.use_both_tasks % doing a paired sample test
     % compare IDs (thanks https://www.mathworks.com/matlabcentral/answers/358722-how-to-compare-words-from-two-text-files-and-get-output-as-number-of-matching-words)
 
     % get task2 IDs
-    RepParams.task2_IDs = RepParams.data.brain_data.(RepParams.task2).sub_ids;
+    RepParams.task2_IDs = RepParams.brain_data.(RepParams.task2).sub_ids;
     
     % compare task1 w task2
     %fprintf(['Comparing subject IDs from from task1:\n(',RepParams.task1,')\n' ...
     %        'with IDs from task2:\n(',RepParams.task2,').\n']);
-    RepParams.subIDs = intersect(RepParams.task1_IDs,RepParams.task2_IDs);
+    RepParams.subIDs = intersect(RepParams.task1_IDs, RepParams.task2_IDs);
     %subIDs=subIDs(2:end); % in case the first find is empty - TODO add a check here first - NEW should be fine now bc checking for empty in task1_IDs and task2_IDs AND explicitly checking for empty in intersection
 
 else % doing a one-sample test
     %fprintf(['Using subject IDs from from task1 (',RepParams.task2,').\n']);
-    RepParams.subIDs=RepParams.task1_IDs;
+    RepParams.subIDs = RepParams.task1_IDs;
 end
 
 % Developers: if testing limit to subset of data
 if RepParams.testing
-    RepParams.n_subs=RepParams.n_subs_subset;
+    RepParams.n_subs = RepParams.n_subs_subset;
 else
-    RepParams.n_subs=length(RepParams.subIDs);
+    RepParams.n_subs = length(RepParams.subIDs);
 end
 
 % if doing ground truth, use all data
 if RepParams.do_ground_truth
-    RepParams.n_subs_subset=RepParams.n_subs;
+    RepParams.n_subs_subset = RepParams.n_subs;
 end
 
 % This line extracts the number of nodes (voxels, areas) 
 % Do n_var*(n_var - 1)/2 for number of fc links
-RepParams.n_var = sum(RepParams.data.study_info.mask(:));
+RepParams.n_var = sum(RepParams.mask(:));
 
 if ~RepParams.use_preaveraged_constrained
-    RepParams.n_nodes = size(RepParams.data.study_info.mask, 1); 
-    % Extract mask from data here - Consider optimization in data structure
-    RepParams.triumask = RepParams.data.study_info.mask;
-
-    template_net = summarize_matrix_by_atlas(template,'suppressimg',1);
+    RepParams.n_nodes = size(RepParams.mask, 1); 
+    
+    template_net = summarize_matrix_by_atlas(RepParams.brain_data.(RepParams.task1).data(:, 1), ...
+                                             'suppressimg', 1, 'mask', RepParams.mask);
+    
     RepParams.n_node_nets = size(template_net, 1); % square
-    trilmask_net = tril(true(n_node_nets)); 
+    RepParams.trilmask_net = tril(true(RepParams.n_node_nets)); 
+
     % I know it's annoying to switch to tril here instead of triu, but summarize_matrix_by_atlas gives results in lower triangle (tril is my habit) while NBS uses triu...
 end
-
-disp('Hey')
-return;
-
 
 %% GROUND TRUTH ONLY: Pre-load and reorder data unless already specified to be loaded
 % note that for benchmarking (not ground truth), we load/reorder data during each repetition
@@ -139,7 +137,7 @@ if RepParams.do_ground_truth
 
     if strcmp(load_data,'y')
     
-        fprintf('Loading %d subjects. Progress:\n', RepParams.n_subs);
+        %fprintf('Loading %d subjects. Progress:\n', RepParams.n_subs);
 
         % load data differently for paired or one-sample test
         if RepParams.use_both_tasks % for paired
@@ -149,22 +147,16 @@ if RepParams.do_ground_truth
 
                     m = zeros(RepParams.n_var, RepParams.n_subs*2);
 
-                    for i = 1:n_subs
-                        % task 1
-                        RepParams.this_file_task1 = [RepParams.data_dir, RepParams.task1, '/', ...
-                                                     RepParams.subIDs{i}, '_', RepParams.task1, ...
-                                                     RepParams.data_type_suffix];
-                        m(:,i) = importdata(RepParams.this_file_task1);
-                        % task 2
-                        RepParams.this_file_task2 = [RepParams.data_dir, RepParams.task2,'/', ...
-                                                     RepParams.subIDs{i},'_', RepParams.task2, ...
-                                                     RepParams.data_type_suffix];
-                        m(:,n_subs+i) = importdata(RepParams.this_file_task2);
+                    for i = 1:RepParams.n_subs                   
+
+                        m(:, i) = util_extract_subject_data(RepParams.brain_data, task1, i);                
+                                            
+                        m(:,n_subs + i) = util_extract_subject_data(RepParams.brain_data, task2, i);
                         
                         % print every 50 subs x 2 tasks
-                        if mod(i,50)==0 
-                            fprintf('%d/%d  (x2 tasks)\n',i,n_subs)
-                        end
+                        %if mod(i,50)==0 
+                        %    fprintf('%d/%d  (x2 tasks)\n',i,n_subs)
+                        %end
                     end
                 else % go ahead and reorder by atlas and pool by nets/all for ground truth
 
@@ -173,41 +165,32 @@ if RepParams.do_ground_truth
                                   RepParams.n_subs * 2);
                     m_pool_all = zeros(1, RepParams.n_subs * 2);
 
-                    for i = 1:n_subs
+                    for i = 1:RepParams.n_subs
+                
+                        sub_data_t1 = util_extract_subject_data(RepParams.brain_data, task1, i);
+                        m(:,i) = sub_data_t1;
                         
-                        % task 1
-                        RepParams.this_file_task1 = [RepParams.data_dir, RepParams.task1, '/', ...
-                                                     RepParams.subIDs{i}, '_', RepParams.task1, ...
-                                                     RepParams.data_type_suffix];
-
-                        d=importdata(this_file_task1);
-                        d=reorder_matrix_by_atlas(d, mapping_category); % reorder bc proximity matters for SEA and cNBS
-                        m(:,i) = d(triumask);
+                        d = util_unflatten_diagonal(sub_data_t1);      
 
                         d_net = summarize_matrix_by_atlas(d, 'suppressimg', 1);
-                        m_net(:,i) = d_net(trilmask_net);
+                        m_net(:,i) = d_net(RepParams.trilmask_net);  
                       
-                        m_pool_all(i) = mean(d(triumask));
+                        m_pool_all(i) = mean(d(RepParams.triumask));
+                        
+                        sub_data_t2 = util_extract_subject_data(RepParams.brain_data, task2, i);
+                        m(:,RepParams.n_subs + i) = sub_data_t2;
 
-                        % task 2
-                        RepParams.this_file_task2 = [RepParams.data_dir, RepParams.task2,'/', ...
-                                                     RepParams.subIDs{i}, '_', RepParams.task2, ... 
-                                                     RepParams.data_type_suffix];
-
-                        d = importdata(this_file_task2);
-                        d = reorder_matrix_by_atlas(d, mapping_category);
+                        d = util_unflatten_diagonal(sub_data_t2);  
                         
-                        m(:,n_subs+i) = d(triumask);
+                        d_net = summarize_matrix_by_atlas(d,'suppressimg',1);
+                        m_net(:,RepParams.n_subs + i) = d_net(RepParams.trilmask_net);
                         
-                        d_net=summarize_matrix_by_atlas(d,'suppressimg',1);
-                        m_net(:,n_subs+i)=d_net(trilmask_net);
-                        
-                        m_pool_all(RepParams.n_subs + i)= mean(d(triumask));
+                        m_pool_all(RepParams.n_subs + i) = mean(d(RepParams.triumask)); 
 
                         % print every 50 subs x 2 tasks
-                        if mod(i,50)==0 
-                            fprintf('%d/%d  (x2 tasks)\n', i, RepParams.n_subs) 
-                        end
+                        %if mod(i,50)==0 
+                        %    fprintf('%d/%d  (x2 tasks)\n', i, RepParams.n_subs) 
+                        %end
                     end
                 end
             else
@@ -220,14 +203,9 @@ if RepParams.do_ground_truth
                 m = zeros(RepParams.n_var, RepParams.n_subs);
 
                 for i = 1:n_subs
-                    RepParams.this_file_task1 = [RepParams.data_dir, RepParams.task1, '/', ...
-                                                 RepParams.subIDs{i}, '_', RepParams.task1, ...
-                                                 RepParams.data_type_suffix];
-                    m(:,i)=importdata(this_file_task1);
-                    % print every 100
-                    if mod(i,100)==0 
-                        fprintf('%d/%d\n',i,n_subs) 
-                    end
+                    
+                    m(:,i) = util_extract_subject_data(RepParams.brain_data, task1, i);
+                    
                 end
             else % go ahead and reorder by atlas and pool by nets/all for ground truth
                 m = zeros(RepParams.n_nodes*(RepParams.n_nodes-1)/2, RepParams.n_subs);
@@ -235,18 +213,22 @@ if RepParams.do_ground_truth
                               RepParams.n_subs);
                 m_pool_all=zeros(1, RepParams.n_subs);
 
-                for i = 1:n_subs
-                    RepParams.this_file_task1 = [RepParams.data_dir, RepParams.task1, '/', ...
-                                                 RepParams.subIDs{i}, '_', ...
-                                                 RepParams.task1, RepParams.data_type_suffix];
-                    d=importdata(RepParams.this_file_task1);
-                    d=reorder_matrix_by_atlas(d,mapping_category); % reorder bc proximity matters for SEA and cNBS
-                    m(:,i) = d(triumask);
+                for i = 1:n_subs  
+                    
+                    sub_data_t1 = util_extract_subject_data(RepParams.brain_data, task1, i);                            
+                    
+                    d = util_unflatten_diagonal(sub_data_t1);    
+                    
+                    % reorder bc proximity matters for SEA and cNBS
+                    d=reorder_matrix_by_atlas(d, mapping_category); 
+                    m(:, i) = d(triumask);
+
                     d_net=summarize_matrix_by_atlas(d,'suppressimg',1);
-                    m_net(:,i)=d_net(trilmask_net);
-                    m_pool_all(i)=mean(d(triumask));
+
+                    m_net(:, i) = d_net(trilmask_net);
+                    m_pool_all(i) = mean(d(triumask));
                     % print every 100
-                    if mod(i,100)==0; fprintf('%d/%d\n',i,n_subs); end
+                    % if mod(i,100)==0; fprintf('%d/%d\n',i,n_subs); end
                 end
             end 
         end
@@ -256,9 +238,6 @@ if RepParams.do_ground_truth
     end
 
 end
-
-% I CURRENTLY REVIEW UP TO HERE
-disp('Got here with no issues')
 
 %% Set up design matrix, contrasts, and (for cNBS) edge groups
 
@@ -318,7 +297,6 @@ else
     nbs_exchange='';
 end
 
-
 % make edge groupings (for cNBS/SEA)
 if ~RepParams.use_preaveraged_constrained % no need to reorder/pool
     edge_groups = load_atlas_edge_groups(RepParams.n_nodes, RepParams.mapping_category);
@@ -347,21 +325,27 @@ end
 %if use_both_tasks; rep_params.task2=task2; end
 
 % assign NBS parameters to UI (see NBS.m)
-UI.method.ui=nbs_method;
-UI.design.ui=dmat;
-UI.contrast.ui=nbs_contrast;
-UI.test.ui=nbs_test_stat; % alternatives are one-sample and F-test
-UI.perms.ui=n_perms;
-UI.thresh.ui=tthresh_first_level;
-UI.alpha.ui=pthresh_second_level;
-UI.statistic_type.ui=cluster_stat_type; 
-UI.size.ui=cluster_size_type;
-UI.omnibus_type.ui=omnibus_type; 
-UI.edge_groups.ui=edge_groups;
-UI.use_preaveraged_constrained.ui=edge_groups;
-UI.exchange.ui=nbs_exchange;
-%UI.do_Constrained_FWER_second_level.ui=do_Constrained_FWER_second_level; 
+UI.method.ui = RepParams.nbs_method;
+UI.design.ui = dmat;
+UI.contrast.ui = nbs_contrast;
+UI.test.ui = RepParams.nbs_test_stat; % alternatives are one-sample and F-test
+UI.perms.ui = RepParams.n_perms;
+UI.thresh.ui = RepParams.tthresh_first_level;
+UI.alpha.ui = RepParams.pthresh_second_level;
+UI.statistic_type.ui = RepParams.cluster_stat_type; 
+UI.size.ui = RepParams.cluster_size_type;
+UI.omnibus_type.ui = RepParams.omnibus_type; 
+UI.edge_groups.ui = edge_groups;
+UI.use_preaveraged_constrained.ui = edge_groups;
+UI.exchange.ui = nbs_exchange;
+% UI.do_Constrained_FWER_second_level.ui=do_Constrained_FWER_second_level;
 
+% Non - NBS data - data not needed for the NBS execution
+% Store negative and positive contrast in UI - might result in bugs -
+% hopefullly not
+UI.nbs_contrast_neg = nbs_contrast_neg;
+% store original contrast as well - avoid losing it when it's set to negative
+UI.nbs_contrast = nbs_contrast; 
 
 end
 

@@ -34,9 +34,6 @@ for stat_id=1:length(Params.all_cluster_stat_types)
         
         [UI, RepParams] = setup_benchmarking(Params);
         
-        disp('All - ok - until here');
-        return;
-
         FWER = 0;
         FWER_neg = 0;
 
@@ -101,7 +98,7 @@ for stat_id=1:length(Params.all_cluster_stat_types)
                 end
 
             else
-
+                
                 ids=randperm(n_subs,n_subs_subset)';
             end
 
@@ -111,7 +108,6 @@ for stat_id=1:length(Params.all_cluster_stat_types)
         % if FPR, set up random task order
         % Note that we don't want to use balanced perms (cf. Southworth et al., Properties of Balanced Permutations)
         if ~do_TPR
-            
             if (use_both_tasks && paired_design) || ~use_both_tasks
                 switch_task_order=randi([0,1],n_subs_subset,rep_params.n_repetitions);
             else
@@ -128,15 +124,10 @@ for stat_id=1:length(Params.all_cluster_stat_types)
             fprintf('Specified %d workers but only %d available. Setting to max available.\n',n_workers,c.NumWorkers);
              n_workers=c.NumWorkers;
         end
-
-        if isempty(gcp('nocreate'))
-            my_pool = parpool(n_workers);
-        end % set from here bc doesn't limit to the specified n streams on server
+        if isempty(gcp('nocreate')); my_pool = parpool(n_workers); end % set from here bc doesn't limit to the specified n streams on server
         
-        if rep_params.testing
-            fprintf('\n*** TESTING MODE ***\n\n')
-        end
-
+        if rep_params.testing; fprintf('\n*** TESTING MODE ***\n\n'); end
+        %if rep_params.do_simulated_effect; fprintf('*** SYNTHETIC EFFECT ADDED ***\n'); end
         fprintf(['Starting benchmarking - ',task1,'_v_',task2,'::',UI.statistic_type.ui,omnibus_str,'.\n']);
         
         
