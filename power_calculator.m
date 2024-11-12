@@ -1,15 +1,13 @@
 %%%%%
     % Power Calculator
-    % Planned route - suggest data structure
-    % Avoid varargin? - Also I hate this pair value thing from MatLab
-    % Template variable - What kind of matrix is it?
-    % RepParams.n_node_nets - Number of networks extracted from atlas
-    % m - stores something related to ground truth data
-
-    % Template - ask about the following lines:
-        %template=importdata(template_file);
-        %template_net=summarize_matrix_by_atlas(template(:,:,1),'suppressimg',1);
-        %n_node_nets=size(template_net,1); % square
+        % IMPORTANT - DISCUSS PARALELISATION PROBLEMS - URGENT
+        % Probably didn't run in parallel - I suspect
+        % Ask about d, m_test, and m - don't forget to add comment
+        % Switch task order - i - there appears to have a leaky i
+        % Function - naming practices
+        % gt parameters - why?
+        % Ask about different atlasses - where are the files 
+        % ask about tril mask - network flattening
 %%%%%
 
 % Change for test
@@ -32,10 +30,13 @@ end
 addpath(genpath(current_path));
 
 Params = setparams();
-Params.data = data_matrix;
+Params = setup_experiment_data(Params, data_matrix);
+
+run_benchmarking(Params);
 
 % I only reviewed the non-ground truth stuff
-RepParams = setup_benchmarking(Params, false);
+% RepParams = setup_benchmarking(Params, false);
+
 
 % Fix gt stuff now
 % GtParams = setup_benchmarking(Params, true);

@@ -1,4 +1,4 @@
-function [summary_matrix,summary_matrix_std]=summarize_matrix_by_atlas(mat, varargin)
+function [summary_matrix,summary_matrix_std] = summarize_matrix_by_atlas(mat, varargin)
 % load mask, take avg within edge pairs
 % IF WANT TO REORDER, MUST NOT ALREADY BE REORDERED!
 % inputs: mat
@@ -15,6 +15,8 @@ defaultdo_edge_counts=0;
 defaultdo_std=0;
 defaultatlascategory='subnetwork'; % options include subnetwork, lobe
 defaultdatacategory='none'; % options include ICC, scandur, none
+% Default maks might cause compatibility issues
+default_mask = [];
 
 addParameter(p,'saveimg',defaultsaveimg,@isnumeric);
 addParameter(p,'suppressimg',defaultsuppressimg,@isnumeric);
@@ -23,6 +25,7 @@ addParameter(p,'do_edge_counts',defaultdo_edge_counts,@isnumeric);
 addParameter(p,'do_std',defaultdo_std,@isnumeric);
 addParameter(p,'atlascategory',defaultatlascategory,@ischar);
 addParameter(p,'datacategory',defaultdatacategory,@ischar);
+addParameter(p,'mask', default_mask,@islogical);
 
 parse(p, varargin{:});
 
@@ -36,14 +39,15 @@ do_edge_counts = p.Results.do_edge_counts;
 do_std = p.Results.do_std;
 atlascategory = p.Results.atlascategory;
 datacategory = p.Results.datacategory;
+mask = p.Results.mask;
 
 clearvars p varargin
 
 %% Setup data
 
 % restructure and reorder
-if size(mat,1) ~= size(mat,2)
-   mat = structure_data(mat); 
+if size(mat,1) ~= size(mat,2) || ~isempty(mask)
+   mat = structure_data(mat, 'mask', mask); 
 end
 if reorderimg
     mat = reorder_matrix_by_atlas(mat,atlascategory);
@@ -59,8 +63,7 @@ mask=ones(size(mat));
 %         error('mask dim do not match matrix dim')
 %     end
 % end
-
-map=load_atlas_mapping(matdim,atlascategory);
+map = load_atlas_mapping(matdim, atlascategory);
 lobe_mapping=map.category(2:end)-map.category(1:end-1);
 lobe_mapping=[0; find(lobe_mapping==1); length(lobe_mapping)+1];
 lobe_mapping=lobe_mapping+1;

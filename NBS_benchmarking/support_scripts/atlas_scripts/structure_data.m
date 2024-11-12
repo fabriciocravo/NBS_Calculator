@@ -82,7 +82,7 @@ if any(strcmp('mask',using_defaults))
     
     
 else
-    
+
     if sum(+mask(:)) ~= length(unstruct_data)
         error('Mask - data dimension mismatch')
     end
