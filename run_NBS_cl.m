@@ -1,3 +1,4 @@
+function nbs = run_NBS_cl(X, Y, Params)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Runs NBS from command line
 % Directions:
@@ -5,41 +6,34 @@
 % 2. run this script
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Setup
-[current_path,~,~]=fileparts(mfilename('fullpath')); % assuming NBS_benchmarking is current folder
-addpath(genpath(current_path));
-setparams;
-if exist(nbs_dir,'dir')
-    addpath(genpath(nbs_dir));
-else
-    error(['NBS toolbox path does not exist (see setparams.m): ',nbs_dir]);
-end
-
 % Developer parameter changes
-if testing 
-    n_perms=test_n_perms;
+if Params.testing 
+    Params.n_perms=Params.test_n_perms;
 end
 
 % Move parameters into UI variable (comes from the NBS GUI)
-UI.method.ui=nbs_method;
-UI.design.ui=design_matrix_file;
-UI.contrast.ui=contrast;
-UI.test.ui=nbs_test_stat;
-UI.perms.ui=n_perms;
-UI.thresh.ui=tthresh_first_level;
-UI.alpha.ui=pthresh_second_level;
-UI.statistic_type.ui=cluster_stat_type;
-UI.size.ui=cluster_size_type;
-UI.edge_groups.ui=edge_groups_file;
-UI.exchange.ui=exchange;
-UI.matrices.ui=data_file;
-UI.use_preaveraged_constrained.ui=use_preaveraged_constrained;
+% UI.DIMS.ui = 
+UI.method.ui=Params.nbs_method;
+UI.design.ui=X;
+UI.contrast.ui=Params.contrast;
+UI.test.ui=Params.nbs_test_stat;
+UI.perms.ui=Params.n_perms;
+UI.thresh.ui=Params.tthresh_first_level;
+UI.alpha.ui=Params.pthresh_second_level;
+UI.statistic_type.ui=Params.cluster_stat_type;
+UI.size.ui=Params.cluster_size_type;
+UI.edge_groups.ui=Params.edge_groups_file;
+UI.exchange.ui=Params.exchange;
+UI.matrices.ui=Y;
+UI.use_preaveraged_constrained.ui=Params.use_preaveraged_constrained;
 
 % Run command line NBS (TODO: maybe rename NBSrun_cl)
 nbs=NBSrun_smn(UI);
 
+return;
+
 % Significant results
-if ischar(pthresh_second_level); pthresh_second_level=str2num(pthresh_second_level); end
+if ischar(Params.pthresh_second_level); pthresh_second_level=str2num(pthresh_second_level); end
 sig_results=nbs.NBS.pval<pthresh_second_level;
 
 % Map significant cNBS results to the edge level

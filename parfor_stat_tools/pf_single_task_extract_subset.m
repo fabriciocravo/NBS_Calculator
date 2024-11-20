@@ -1,9 +1,10 @@
-function m_test = pfor_single_task_extract_subset(rep_sub_ids, rep_id, Brain_Data, ...
-                                                  task_1, mapping_category, m_test)
+% Maybe define it locally? Is only used by pfor_repetition_loop
+function m_test = pf_single_task_extract_subset(rep_sub_ids, i_rep, Brain_Data, ...
+                                                  task_1, mapping_category, triumask, switch_task_order, m_test)
 
-    %if FPR, use the predefined task order
+    % if FPR, use the predefined task order
     if ~do_TPR
-        if switch_task_order(rep_id,this_repetition)
+        if switch_task_order(i_rep, this_repetition)
             task_flipper=-1;
         else
             task_flipper=1;
@@ -11,6 +12,7 @@ function m_test = pfor_single_task_extract_subset(rep_sub_ids, rep_id, Brain_Dat
     else
         task_flipper=1;
     end
+    task_flipper=1;
     
     if use_preaveraged_constrained % no reordering TODO: add above as well
         for i = 1:n_subs_subset

@@ -1,4 +1,4 @@
-function summarize_tprs(summary_type,varargin)
+function summarize_tprs(summary_type, varargin)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % This script summarizes results data to ultimately compare true positive
 % rates across levels of inference.
@@ -44,7 +44,7 @@ function summarize_tprs(summary_type,varargin)
 
 [current_path,~,~]=fileparts(mfilename('fullpath')); % assuming current folder is NBS_benchmarking
 addpath(genpath(['../',current_path])); % need to add the complete script dir to get the config files
-do_fpr=0;
+do_fpr = 0;
 setpaths;
 setparams_summary;
 summary_tools; % contains summary functions
