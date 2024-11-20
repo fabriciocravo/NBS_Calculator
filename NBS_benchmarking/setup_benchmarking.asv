@@ -4,8 +4,6 @@ function [UI, RepParams] = setup_benchmarking(RepParams, do_gt)
 % This will load data and set up the parameters needed to run NBS benchmarking
 % RepParams = RP 
 % Network Inference - apply atlas - calculate coehns 
-% Save all results 
-% See summarize_tprs for data collection
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 addpath(genpath(RepParams.nbs_dir));
@@ -39,19 +37,12 @@ else
     RepParams.do_ground_truth = 0;
 end
 
-%% Adjust NBS Method According to Stat Type
 % special setup for nonparametric FDR (part of classic NBS toolbox) and parametric FDR and Bonferroni (newly added here)  since can't run it using cluster_stat_type
-switch RepParams.cluster_stat_type
-
-    case 'FDR'
-       RepParams.nbs_method = 'Run FDR';
-    case 'Parametric_Bonferroni'
-        RepParams.nbs_method = 'Run Parametric Edge-Level Correction';
-    case 'Parametric_FDR'
-        RepParams.nbs_method = 'Run Parametric Edge-Level Correction';
-    otherwise
-        RepParams.nbs_method = 'Run NBS';
-
+if strcmp(RepParams.cluster_stat_type,'FDR')
+    RepParams.nbs_method = 'Run FDR';
+elseif strcmp(RepParams.cluster_stat_type,'Parametric_FDR') ...
+       || strcmp(RepParams.cluster_stat_type,'Parametric_Bonferroni')
+    RepParams.nbs_method = 'Run Parametric Edge-Level Correction';
 end
 
 %% Check expected inclusion of resting tasks
@@ -97,9 +88,28 @@ if RepParams.do_ground_truth
     RepParams.n_subs_subset = RepParams.n_subs;
 end
 
+% This line extracts the number of nodes (voxels, areas) 
+% Do n_var*(n_var - 1)/2 for number of fc links
+RepParams.n_var = sum(RepParams.mask(:));
+
+% Get this before
+% I think this depends if we are using a network method or not 
+% Nodes are defined here
+if ~RepParams.use_preaveraged_constrained && false
+    RepParams.n_nodes = size(RepParams.mask, 1); 
+    
+    template_net = summarize_matrix_by_atlas(RepParams.brain_data.(RepParams.task1).data(:, 1), ...
+                                             'suppressimg', 1, 'mask', RepParams.mask);
+    
+    RepParams.n_node_nets = size(template_net, 1); % square
+    RepParams.trilmask_net = tril(true(RepParams.n_node_nets)); 
+
+    % I know it's annoying to switch to tril here instead of triu, but summarize_matrix_by_atlas gives results in lower triangle (tril is my habit) while NBS uses triu...
+end
+
 %% GROUND TRUTH ONLY: Pre-load and reorder data unless already specified to be loaded
 % note that for benchmarking (not ground truth), we load/reorder data during each repetition
-if RepParams.do_ground_truth
+if RepParams.do_ground_truth && false
     
     load_data='y';
     if exist('m','var')
@@ -171,7 +181,7 @@ if RepParams.do_ground_truth
         
         else % for single task v 0
 
-            if RP.use_preaveraged_constrained % no need to reorder/pool
+            if use_preaveraged_constrained % no need to reorder/pool
                 m = zeros(RepParams.n_var, RepParams.n_subs);
 
                 for i = 1:n_subs
@@ -216,6 +226,16 @@ end
 create_test_contrast(RepParams.test_type, RepParams.n_subs_subset);
 
 
+% make edge groupings (for cNBS/SEA)
+if ~RepParams.use_preaveraged_constrained && false % no need to reorder/pool
+    edge_groups = load_atlas_edge_groups(RepParams.n_nodes, RepParams.mapping_category);
+    edge_groups = tril(edge_groups,-1);
+    % TODO: in NBS function, should we require zero diag? Automatically clear diag? Something else?
+else
+    % plus 1 because the script expects there to be a "0" (and will subsequently ignore..."
+    edge_groups=1:length(RepParams.mask) + 1;
+end
+
 %% Assign params to structures
 % Goal: should be able to run config file, load rep_params and UI from reference, and replicate reference results
 
@@ -245,8 +265,8 @@ UI.alpha.ui = RepParams.pthresh_second_level;
 UI.statistic_type.ui = RepParams.cluster_stat_type; 
 UI.size.ui = RepParams.cluster_size_type;
 UI.omnibus_type.ui = RepParams.omnibus_type; 
-UI.edge_groups.ui = RepParams.edge_groups;
-UI.use_preaveraged_constrained.ui = RepParams.edge_groups;
+UI.edge_groups.ui = edge_groups;
+UI.use_preaveraged_constrained.ui = edge_groups;
 UI.exchange.ui = RepParams.nbs_exchange;
 % UI.do_Constrained_FWER_second_level.ui=do_Constrained_FWER_second_level;
 

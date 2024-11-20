@@ -46,7 +46,8 @@ Params.use_both_tasks=1; % for a paired-sample test
 Params.paired_design=1; % currently required if using a paired design
 
 %%% Trimmed Scans %%%
-% Specify whether to use resting runs for task2 which have been trimmed to match each task's scan duration (in no. frames for single encoding direction; cf. https://protocols.humanconnectome.org/HCP/3T/imaging-protocols.html)
+% Specify whether to use resting runs for task2 which have been trimmed to match each task's scan duration
+% (in no. frames for single encoding direction; cf. https://protocols.humanconnectome.org/HCP/3T/imaging-protocols.html)
 % Note: all scans were acquired with the same TR
 Params.use_trimmed_rest=0; % default = 0
 Params.n_frames.EMOTION=176;
@@ -60,10 +61,11 @@ Params.n_frames.REST=1200;
 Params.n_frames.REST2=1200;
 
 %%% Resampling parameters %%%
-Params.n_workers=15; % num parallel workers for parfor, best if # workers = # cores
-Params.mapping_category='subnetwork'; % for cNBS
-Params.n_repetitions=500;  % 500 recommended
-Params.n_subs_subset=40;   % 40 | 80 | 120
+Params.n_workers = 3; % num parallel workers for parfor, best if # workers = # cores
+Params.mapping_category = 'subnetwork'; % for cNBS
+Params.n_repetitions = 500;  % 500 recommended
+Params.n_subs_subset = 40;   % 40 | 80 | 120
+Params.list_of_nsubset = {40, 80, 120}; % To change this, add more when necessary
                     % size of subset is full group size (N=n*2 for two sample t-test or N=n for one-sample)
 
 
@@ -82,6 +84,8 @@ Params.tthresh_first_level = 3.1;    % t=3.1 corresponds with p=0.005-0.001 (DOF
                             % Only used if cluster_stat_type='Size'
 Params.pthresh_second_level = 0.05;  % FWER or FDR rate
 Params.cluster_stat_type = 'Size';   
+Params.all_cluster_stat_types = {'Parametric_Bonferroni', 'Parametric_FDR', 'Size', 'TFCE', ...
+    'Constrained', 'Constrained_FWER', 'Omnibus'};
 Params.stat_type_gt = 'Size';
 
 % cluster_stat_type (should be renamed stat_type) is required for all inference procedures except nonparametric edge-level
@@ -92,11 +96,13 @@ Params.stat_type_gt = 'Size';
 % 'Constrained' (predefined network+FDR; nbs_method='Run NBS')
 % 'Constrained_FWER' (predefined network+FWER; nbs_method='Run NBS')
 % 'Omnibus' (whole-brain; nbs_method='Run NBS')
-% 'SEA' (under construction) (predefined network; nbs_method='Run NBS')
+% 'SEA' (under construction) (predefined network; nbs_method='Run NBS') -
+% No SEA
 Params.cluster_size_type = 'Extent'; % 'Intensity' | 'Extent'
                             % Only used if cluster_stat_type='Size'
-Params.all_omnibus_types={'Multidimensional_cNBS'};
-Params.omnibus_type = 'Threshold_Positive';  % 'Threshold_Positive' | 'Threshold_Both_Dir' | 'Average_Positive' | 'Average_Both_Dir' | 'Multidimensional_cNBS' | 'Multidimensional_all_edges' 
+Params.all_omnibus_types = {'Multidimensional_cNBS'};
+Params.omnibus_type = 'Multidimensional_cNBS'; 
+% 'Threshold_Positive' | 'Threshold_Both_Dir' | 'Average_Positive' | 'Average_Both_Dir' | 'Multidimensional_cNBS' | 'Multidimensional_all_edges' 
                             % Only used if cluster_stat_type='Omnibus'
 Params.omnibus_type_gt='Threshold_Positive';
 Params.use_preaveraged_constrained = 0; % 1 | 0
@@ -107,7 +113,7 @@ Params.use_preaveraged_constrained = 0; % 1 | 0
 
 Params.testing = 1;
 Params.test_n_perms = '20';
-Params.test_n_repetitions = 100;
-Params.test_n_workers = 4;
+Params.test_n_repetitions = 30;
+Params.test_n_workers = 2;
 
 end

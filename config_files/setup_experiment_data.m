@@ -1,4 +1,4 @@
-function Params = setup_experiment_data(Params, data)
+function Params = setup_experiment_data(Params, Dataset)
     %
     % Description:
     %   This functions take the necessary data from an experiment data set
@@ -14,7 +14,13 @@ function Params = setup_experiment_data(Params, data)
     %   Params - Parameter struct for power calculation with the data from
     %   the experiment added
     %
+    
+    % Extract study mask
+    Params.mask = Dataset.study_info.mask;
+    
+    % Extract number of variables - change for multivariable methods
+    Params.n_var = sum(Params.mask(:));
 
-    Params.brain_data = data.brain_data;
-    Params.mask = data.study_info.mask;
+    % Extract number of nodes 
+    Params.n_nodes = size(Params.mask, 1);
 end
