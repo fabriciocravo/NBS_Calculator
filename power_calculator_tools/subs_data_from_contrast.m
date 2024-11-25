@@ -1,4 +1,4 @@
-function [X, Y, RP] = y_and_x_from_contrast(RP, contrast, BrainData)
+function [X, Y, RP] = subs_data_from_contrast(RP, contrast, BrainData)
     
     % Get sub ids from contrast
     % Maybe this changes? I don't know if all contrasts have two elements
@@ -11,6 +11,7 @@ function [X, Y, RP] = y_and_x_from_contrast(RP, contrast, BrainData)
             
             n_subs_1 = length(RP.sub_ids_cond1);
             n_subs_2 = length(RP.sub_ids_cond2);
+            RP.sub_ids = [RP.sub_ids_cond1; RP.sub_ids_cond2];     
 
             % X1 is condition 1 and X2 is rest
             X = zeros(n_subs_1 + n_subs_2, 2);
@@ -30,6 +31,7 @@ function [X, Y, RP] = y_and_x_from_contrast(RP, contrast, BrainData)
             % intersection
             RP.sub_ids_cond1 = sub_ids;
             RP.sub_ids_cond2 = sub_ids;
+            RP.sub_ids = sub_ids;
     
             [~, sub_index_t1] = ismember(sub_ids, sub_ids_cond1);    
             [~, sub_index_t2] = ismember(sub_ids, sub_ids_cond2);    
@@ -50,5 +52,10 @@ function [X, Y, RP] = y_and_x_from_contrast(RP, contrast, BrainData)
             Y = [Y1, Y2]; 
         
     end
+    
+    %% GET SUBJECT Numbers
+    RP.n_subs_1 = length(sub_ids_cond1);
+    RP.n_subs_2 = length(sub_ids_cond1);
+    RP.n_subs = length(sub_ids);
 
 end

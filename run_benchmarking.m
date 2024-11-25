@@ -1,4 +1,4 @@
-function run_benchmarking(RP, X, Y)
+function run_benchmarking(RP, Y)
 % Do NBS-based method benchmarking (cNBS, TFCE, etc)
 %
 % main outputs:
@@ -13,10 +13,11 @@ function run_benchmarking(RP, X, Y)
 % setparams_bench;
     
     % This line is temporary for testing
-    disp('Temporary network assigment still here')
+    disp('Temporary assigment still here')
     RP.all_cluster_stat_types = {'Parametric_Bonferroni', 'Parametric_FDR', 'Size', 'TFCE', ...
     'Constrained', 'Constrained_FWER', 'Omnibus'};
     RP.all_cluster_stat_types = {'Constrained'};
+    RP.list_of_nsubset = {40};
     
 
     for stat_id=1:length(RP.all_cluster_stat_types)
@@ -44,6 +45,17 @@ function run_benchmarking(RP, X, Y)
             for id_nsub_list=1:length(RP.list_of_nsubset)
                 RP.n_subs_subset = RP.list_of_nsubset{id_nsub_list};
 
+                %% Create_file_name
+                [existence, output_dir] = create_and_check_rep_file(RP.data_set, RP.test_name, ...
+                                                                       RP.cluster_stat_type, RP.omnibus_str, ...
+                                                                       RP.n_subs_subset);
+                if existence && RP.recalculate == 0
+                    fprintf('Skipping %s \n', output_dir)
+                    continue
+                else
+                    fprintf('Calculating %s \n', output_dir)
+                end
+
                 [UI, RP] = setup_benchmarking(RP, false);
     
                 FWER = 0;
@@ -53,7 +65,6 @@ function run_benchmarking(RP, X, Y)
                 %% PREALOCATE SPACE FOR OUTPUT DATA
                 edge_stats_all = zeros(RP.n_var, RP.n_repetitions);
                 edge_stats_all_neg = zeros(RP.n_var, RP.n_repetitions);            
-                
         
                 if contains(UI.statistic_type.ui,'Constrained') || strcmp(UI.statistic_type.ui,'SEA')
                     
@@ -61,8 +72,8 @@ function run_benchmarking(RP, X, Y)
                     cluster_stats_all = zeros(length(unique(UI.edge_groups.ui)) - 1, 1, RP.n_repetitions); 
                     cluster_stats_all_neg = zeros(length(unique(UI.edge_groups.ui)) - 1, 1, RP.n_repetitions); 
                     
-                    pvals_all=zeros(length(unique(UI.edge_groups.ui)) - 1, RepParams.n_repetitions);
-                    pvals_all_neg=zeros(length(unique(UI.edge_groups.ui)) - 1, RepParams.n_repetitions); 
+                    pvals_all=zeros(length(unique(UI.edge_groups.ui)) - 1, RP.n_repetitions);
+                    pvals_all_neg=zeros(length(unique(UI.edge_groups.ui)) - 1, RP.n_repetitions); 
         
                 elseif strcmp(UI.statistic_type.ui,'Omnibus')
         
@@ -94,16 +105,20 @@ function run_benchmarking(RP, X, Y)
                 end
                 
                 % randomly subsample subject IDs into groups 
+                % both t and t2 must have the same sample sizes for this to
+                % work properly     
                 for r=1:RP.n_repetitions
-        
+                
                     if RP.use_both_tasks
         
-                        if RP.paired_design
+                        if RP.test_type == 't'
                             ids = randperm(RP.n_subs, RP.n_subs_subset)';
                             ids = [ids; ids + RP.n_subs];
                         else
-                            error('This script hasn''t been fully updated/tested for two-sample yet.');
-                            ids = randperm(RP.n_subs, RP.n_subs_subset*2)';
+                            ids_1 = randperm(RP.n_subs_1, floor(RP.n_subs_subset/2));
+                            ids_2 = randperm(RP.n_subs - RP.n_subs_1 + 1, ceil(RP.n_subs_subset/2)) + (RP.n_subs_1 - 1);
+
+                            ids = [ids_1; ids_2];
                         end
         
                     else
@@ -113,6 +128,7 @@ function run_benchmarking(RP, X, Y)
         
                     ids_sampled(:,r)=ids;
                 end       
+             
                
                 % if FPR, set up random task order
                 % Note that we don't want to use balanced perms (cf. Southworth et al., Properties of Balanced Permutations)
@@ -127,7 +143,7 @@ function run_benchmarking(RP, X, Y)
                     % Don't 
                     switch_task_order = [];
                 end
-                
+               
                 
                 %% Run NBS repetitions
                 % using parfor which requires Parallel Computing Toolbox, but if can't get it set to 1 worker in setparams
@@ -148,7 +164,7 @@ function run_benchmarking(RP, X, Y)
                     fprintf('\n*** TESTING MODE ***\n\n')
                 end
                 
-                fprintf(['Starting benchmarking - ', RP.task1, '_v_', RP.task2, '::', UI.statistic_type.ui,omnibus_str, '.\n']);
+                % fprintf(['Starting benchmarking - ', RP.task1, '_v_', RP.task2, '::', UI.statistic_type.ui, RP.omnibus_str, '.\n']);
                 
                 % parfor (i_rep=1: RP.n_repetitions)
                 for i_rep = 1: RP.n_repetitions
@@ -156,7 +172,7 @@ function run_benchmarking(RP, X, Y)
                     % Encapsulation of the most computationally intensive loop
                     [FWER_rep, edge_stats_all_rep, pvals_all_rep, cluster_stats_all_rep, ...
                      FWER_neg_rep, edge_stats_all_neg_rep, pvals_all_neg_rep, cluster_stats_all_neg_rep] = ...
-                     pf_repetition_loop(i_rep, ids_sampled, switch_task_order, RP, UI);
+                     pf_repetition_loop(i_rep, ids_sampled, switch_task_order, RP, UI, RP.X_rep, Y);
         
                     FWER = FWER + FWER_rep;
                     FWER_neg = FWER_neg + FWER_neg_rep;
@@ -181,49 +197,45 @@ function run_benchmarking(RP, X, Y)
                 
                 run_time = toc;
                 
-                disp('Ok until here?')
-                return;
-                
-                
                 %% Save
-                
-                mkdir(output_dir)
-                
-                if strcmp(UI.statistic_type.ui,'Size')
-                    size_str = ['_',UI.size.ui];
-                else
-                    size_str = '';
+
+                % Discuss naming with Steph tomorrow 
+                if false
+                    if strcmp(UI.statistic_type.ui,'Size')
+                        size_str = ['_',UI.size.ui];
+                    else
+                        size_str = '';
+                    end
+                    
+                    if testing
+                        test_str = '_testing';
+                    else 
+                        test_str='';
+                    end
+                    
+                    if do_TPR 
+                        TPR_str = '';
+                    else 
+                        TPR_str = '_shuffled_for_FPR'; 
+                    end
+                    
+                    if use_both_tasks
+                        condition_str = [rep_params.task1,'_v_',rep_params.task2];
+                    else 
+                        condition_str = rep_params.task1;
+                    end
                 end
-                
-                if testing
-                    test_str = '_testing';
-                else 
-                    test_str='';
-                end
-                
-                if do_TPR 
-                    TPR_str = '';
-                else 
-                    TPR_str = '_shuffled_for_FPR'; 
-                end
-                
-                if use_both_tasks
-                    condition_str = [rep_params.task1,'_v_',rep_params.task2];
-                else 
-                    condition_str = rep_params.task1;
-                end
-                
-                output_filename = [output_dir,'results__',condition_str,TPR_str,'_', ...
-                                   UI.statistic_type.ui,size_str,omnibus_str,'_grsize', ...
-                                   num2str(rep_params.n_subs_subset),test_str,'_', datestr(now,'mmddyyyy_HHMM'),'.mat'];
+            
+
+                %output_filename = [output_dir,'results__',condition_str,TPR_str,'_', ...
+                %                   UI.statistic_type.ui,size_str,omnibus_str,'_grsize', ...
+                %                   num2str(rep_params.n_subs_subset),test_str,'_', datestr(now,'mmddyyyy_HHMM'),'.mat'];
         
-                fprintf('Saving results in %s\n',output_filename)
-                save(output_filename,'edge_stats_all','cluster_stats_all','pvals_all', ...
+                fprintf('Saving results in %s\n', output_dir)
+                save(output_dir,'edge_stats_all','cluster_stats_all','pvals_all', ...
                     'FWER','edge_stats_all_neg','cluster_stats_all_neg', ...
-                    'pvals_all_neg','FWER_neg','UI','rep_params','run_time');
+                    'pvals_all_neg','FWER_neg','UI','RP');
                 
-                % show that results are available in the workspace
-                previous_results_filename__already_loaded=output_filename;
         
             end
         end
