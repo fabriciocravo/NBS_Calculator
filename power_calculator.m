@@ -19,11 +19,14 @@ vars(strcmp(vars, 'data_matrix')) = [];  % Remove the variable you want to keep 
 clear(vars{:});   % Clear all other variables
 clc;
 
+data_dir = '/Users/f.cravogomes/Desktop/Cloned Repos/NBS_Calculator/data/s_hcp_fc_noble_tasks.mat';
 if ~exist('Dataset', 'var')
-    Dataset = load('/Users/f.cravogomes/Desktop/Cloned Repos/NBS_Calculator/data/s_hcp_fc_noble_tasks.mat');
+    Dataset = load(data_dir);
 else
     %disp('Data already loaded')
 end
+% Extract dataset name
+[~, data_set_name, ~] = fileparts(data_dir);
 
 [current_path,~,~]=fileparts(mfilename('fullpath')); % assuming NBS_benchmarking is current folder
 addpath(genpath(current_path));
@@ -33,6 +36,7 @@ addpath(genpath(current_path));
 
 Params = setparams();
 Params = setup_experiment_data(Params, Dataset);
+Params.data_set = data_set_name;
 
 OutcomeData = Dataset.outcome;
 BrainData = Dataset.brain_data;
@@ -40,16 +44,19 @@ BrainData = Dataset.brain_data;
 tests = fieldnames(OutcomeData);
 
 for ti = 1:length(tests)
-
+    t = tests{ti};
+    % Fix RP both tasks
     % RP - stands for Repetition Parameters
     RP = Params;
+    RP.test_name = t;
 
-    t = tests{ti};
 
     RP = infer_test_from_data(RP, OutcomeData.(t), BrainData);
-    [X, Y , RP] = y_and_x_from_contrast(RP, OutcomeData.(t).contrast, BrainData);
+    
+    % y_and_x also extracts subject number and sub_ids
+    [~, Y , RP] = subs_data_from_contrast(RP, OutcomeData.(t).contrast, BrainData);
 
-    run_benchmarking(RP, X, Y)
+    run_benchmarking(RP, Y)
     
     % [X, Y] = y_and_x_from_contrast(test_type, Dataset.outcome.test1.contrast, Dataset.outcome, Dataset.brain_data);
 

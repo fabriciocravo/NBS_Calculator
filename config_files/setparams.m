@@ -13,6 +13,9 @@ function Params = setparams()
 % if false, will use the paths defined below
 Params.system_dependent_paths=0;
 
+% If recalculate is equal to 1 - recalculate
+Params.recalculate = 0;
+
 % Diectories
 Params.nbs_dir = './NBS1.2';
 Params.other_scripts_dir='./NBS_benchmarking/support_scripts/'; 
@@ -113,7 +116,7 @@ Params.use_preaveraged_constrained = 0; % 1 | 0
 
 Params.testing = 1;
 Params.test_n_perms = '20';
-Params.test_n_repetitions = 30;
-Params.test_n_workers = 2;
+Params.test_n_repetitions = 20;
+Params.test_n_workers = 5;
 
 end

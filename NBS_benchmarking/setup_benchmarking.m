@@ -83,14 +83,6 @@ if RepParams.use_both_tasks
     end
 end
     
-%% Get num subjects, num nodes
-
-% Developers: if testing limit to subset of data
-if RepParams.testing
-    RepParams.n_subs = RepParams.n_subs_subset;
-else
-    RepParams.n_subs = length(RepParams.subIDs);
-end
 
 % if doing ground truth, use all data
 if RepParams.do_ground_truth
@@ -210,6 +202,12 @@ if RepParams.do_ground_truth
     end
 
 end
+
+%% Create Design Matrix
+RepParams.X_rep = create_design_matrix(RepParams.test_type, RepParams.n_subs_subset, ...
+                                       'n_subs_1', floor(RepParams.n_subs_subset/2), ...
+                                       'n_subs_2', ceil(RepParams.n_subs_subset/2));
+
 
 %% Set up constrast
 [RepParams.nbs_contrast, RepParams.nbs_contrast_neg, RepParams.nbs_exchange] = ...

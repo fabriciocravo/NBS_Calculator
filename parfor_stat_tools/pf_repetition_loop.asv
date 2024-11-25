@@ -1,6 +1,6 @@
 function [FWER_rep, edge_stats_rep, pvals_rep, cluster_stats_rep, ...
           FWER_rep_neg, edge_stats_rep_neg, pvals_rep_neg, cluster_stats_rep_neg] = ...
-          pf_repetition_loop(i_rep, ids_sampled, switch_task_order, RepParams, UI, X_rep, Y)
+          pf_repetition_loop(i_rep, ids_sampled, switch_task_order, RepParams, UI, X, Y)
 
     %
     % Description:
@@ -26,6 +26,7 @@ function [FWER_rep, edge_stats_rep, pvals_rep, cluster_stats_rep, ...
     rep_sub_ids = ids_sampled(:, i_rep);
     
     % Extract data points for this repetion 
+    X_rep = X(rep_sub_ids, :);
     Y_rep = Y(:, rep_sub_ids);
      
     if RepParams.use_both_tasks 
@@ -49,7 +50,7 @@ function [FWER_rep, edge_stats_rep, pvals_rep, cluster_stats_rep, ...
     % Set this repetition design matrix and Y_rep 
     UI_new.design.ui = X_rep;
     UI_new.matrices.ui = Y_rep;
-    UI_new.contrast.ui = RepParams.nbs_contrast;  
+    UI_new.contrast.ui = RepParams.nbs_contrast;
     
     nbs = NBSrun_smn(UI_new);
     
@@ -108,6 +109,10 @@ function [FWER_rep, edge_stats_rep, pvals_rep, cluster_stats_rep, ...
         cluster_stats_rep = full(nbs.NBS.cluster_stats);
         cluster_stats_rep_neg = full(nbs_neg.NBS.cluster_stats);
  
+    end
+
+    if true
+        %
     end
     
 end

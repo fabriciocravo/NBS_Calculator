@@ -5,7 +5,7 @@ function [nbs_contrast, nbs_contrast_neg, nbs_exchange] = create_test_contrast(t
 
     switch test_type
 
-        case 't2'  
+        case 't'  
             % set up contrasts - positive and negative
             nbs_contrast = zeros(1, n_subs + 1);
             nbs_contrast(1)=1;
@@ -13,9 +13,9 @@ function [nbs_contrast, nbs_contrast_neg, nbs_exchange] = create_test_contrast(t
             nbs_contrast_neg=nbs_contrast;
             nbs_contrast_neg(1)=-1;
 
-            nbs_exchange=[1:n_subs_subset, 1:n_subs_subset];
+            nbs_exchange=[1:n_subs, 1:n_subs];
         
-        case 't'
+        case 't2'
             nbs_contrast=[1,-1];
             nbs_contrast_neg=[-1,1];
     
