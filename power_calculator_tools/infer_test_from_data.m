@@ -29,15 +29,13 @@ function RP = infer_test_from_data(RP, TestData, BrainData)
         sub_ids_cond1 = test.sub_ids(test_type.score == unique_conditions(1));
         sub_ids_cond2 = test.sub_ids(test_type.score == unique_conditions(2));
         
-        % Sorting arrays for equality to optimize both codes 
-        if isequal(sort(sub_ids_cond1), sort(sub_ids_cond2))
+        n_equal = numel(intersect(sort(sub_ids_cond1), sort(sub_ids_cond2)));
+        n_unique = numel(setxor(sub_ids_cond1, sub_ids_cond2));
+ 
+        if n_equal >= n_unique
             test_type = 't';
-        elseif isempty(intersect(sub_ids_cond1, sub_ids_cond2))
+        else
             test_type = 't2';
-        else         
-            test_type = 't';
-            %warning(['Some subjects are duplicated and some are not. ' ...
-            %         'Getting the subject intersection and performing a t_test'])
         end
             
     elseif iscell(TestData.contrast)
@@ -55,15 +53,14 @@ function RP = infer_test_from_data(RP, TestData, BrainData)
                 
                 sub_ids_cond1 = BrainData.(TestData.contrast{1}).sub_ids;
                 sub_ids_cond2 = BrainData.(TestData.contrast{2}).sub_ids;
+
+                n_equal = numel(intersect(sort(sub_ids_cond1), sort(sub_ids_cond2)));
+                n_unique = numel(setxor(sub_ids_cond1, sub_ids_cond2));  
                 
-                if isequal(sort(sub_ids_cond1), sort(sub_ids_cond2))        
+                if n_equal >= n_unique       
                     test_type = 't';        
-                elseif isempty(intersect(sub_ids_cond1, sub_ids_cond2))
-                    test_type = 't2';
                 else
-                    test_type = 't';
-                    %warning(['Some subjects are duplicated and some are not. ' ...
-                    % 'Getting the subject intersection and performing a t_test'])
+                    test_type = 't2';             
                 end
 
             else 

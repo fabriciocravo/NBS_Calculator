@@ -12,12 +12,12 @@ function run_benchmarking(RP, Y)
 
 % setparams_bench;
     
-    % This line is temporary for testing
-    disp('Temporary assigment still here')
-    RP.all_cluster_stat_types = {'Parametric_Bonferroni', 'Parametric_FDR', 'Size', 'TFCE', ...
-    'Constrained', 'Constrained_FWER', 'Omnibus'};
-    RP.all_cluster_stat_types = {'Constrained'};
-    RP.list_of_nsubset = {40};
+    %% This line is temporary for testing
+    %disp('Temporary assigment still here')
+    %RP.all_cluster_stat_types = {'Parametric_Bonferroni', 'Parametric_FDR', 'Size', 'TFCE', ...
+    %'Constrained', 'Constrained_FWER', 'Omnibus'};
+  
+    % RP.list_of_nsubset = {40};
     
 
     for stat_id=1:length(RP.all_cluster_stat_types)
@@ -30,16 +30,18 @@ function run_benchmarking(RP, Y)
         
         % If omnibus, we'll loop through all the specified omnibus types
         if ~strcmp(RP.cluster_stat_type, 'Omnibus')
-            RP.all_omnibus_types = {NaN};
+            loop_omnibus_types = {NaN};
+        else
+            loop_omnibus_types = RP.all_omnibus_types;
         end
         
-        for omnibus_id=1:length(RP.all_omnibus_types) 
-            RP.omnibus_type = RP.all_omnibus_types{omnibus_id};
-    
+        for omnibus_id=1:length(loop_omnibus_types) 
+            RP.omnibus_type = loop_omnibus_types{omnibus_id};
+             
             if ~isnan(RP.omnibus_type)
-                RP.omnibus_str = ['_',RP.omnibus_type];
+                RP.omnibus_str = RP.omnibus_type;
             else 
-                RP.omnibus_str = ''; 
+                RP.omnibus_str = 'nobus'; 
             end
             
             for id_nsub_list=1:length(RP.list_of_nsubset)
@@ -47,8 +49,8 @@ function run_benchmarking(RP, Y)
 
                 %% Create_file_name
                 [existence, output_dir] = create_and_check_rep_file(RP.data_set, RP.test_name, ...
-                                                                       RP.cluster_stat_type, RP.omnibus_str, ...
-                                                                       RP.n_subs_subset);
+                                                                    RP.cluster_stat_type, RP.omnibus_str, ...
+                                                                    RP.n_subs_subset, RP.testing);
                 if existence && RP.recalculate == 0
                     fprintf('Skipping %s \n', output_dir)
                     continue
@@ -65,9 +67,11 @@ function run_benchmarking(RP, Y)
                 %% PREALOCATE SPACE FOR OUTPUT DATA
                 edge_stats_all = zeros(RP.n_var, RP.n_repetitions);
                 edge_stats_all_neg = zeros(RP.n_var, RP.n_repetitions);            
-        
+               
+                disp(length(unique(UI.edge_groups.ui)))
+
                 if contains(UI.statistic_type.ui,'Constrained') || strcmp(UI.statistic_type.ui,'SEA')
-                    
+                  
                     % minus 1 in all - to not count "zero"
                     cluster_stats_all = zeros(length(unique(UI.edge_groups.ui)) - 1, 1, RP.n_repetitions); 
                     cluster_stats_all_neg = zeros(length(unique(UI.edge_groups.ui)) - 1, 1, RP.n_repetitions); 
@@ -77,10 +81,10 @@ function run_benchmarking(RP, Y)
         
                 elseif strcmp(UI.statistic_type.ui,'Omnibus')
         
-                    if strcmp(omnibus_type,'Multidimensional_cNBS')
-                        n_nulls=length(unique(UI.edge_groups.ui))-1;
+                    if strcmp(UI.omnibus_type.ui,'Multidimensional_cNBS')
+                        n_nulls = length(unique(UI.edge_groups.ui))-1;
                     else
-                        n_nulls=1;
+                        n_nulls = 1;
                     end
         
                     cluster_stats_all=zeros(1, n_nulls, RP.n_repetitions);
@@ -165,9 +169,10 @@ function run_benchmarking(RP, Y)
                 end
                 
                 % fprintf(['Starting benchmarking - ', RP.task1, '_v_', RP.task2, '::', UI.statistic_type.ui, RP.omnibus_str, '.\n']);
-                
+               
+
                 % parfor (i_rep=1: RP.n_repetitions)
-                for i_rep = 1: RP.n_repetitions
+                for i_rep = 1:RP.n_repetitions
                     
                     % Encapsulation of the most computationally intensive loop
                     [FWER_rep, edge_stats_all_rep, pvals_all_rep, cluster_stats_all_rep, ...
@@ -231,10 +236,10 @@ function run_benchmarking(RP, Y)
                 %                   UI.statistic_type.ui,size_str,omnibus_str,'_grsize', ...
                 %                   num2str(rep_params.n_subs_subset),test_str,'_', datestr(now,'mmddyyyy_HHMM'),'.mat'];
         
-                fprintf('Saving results in %s\n', output_dir)
+                fprintf('###### Saving results in %s ######### \n', output_dir)
                 save(output_dir,'edge_stats_all','cluster_stats_all','pvals_all', ...
                     'FWER','edge_stats_all_neg','cluster_stats_all_neg', ...
-                    'pvals_all_neg','FWER_neg','UI','RP');
+                    'pvals_all_neg','FWER_neg','UI','RP', 'run_time');
                 
         
             end

@@ -1,17 +1,29 @@
 %%%%%
     % Power Calculator
-        % Switch task order - i - there appears to have a leaky i
-        % Ask about d, m_test, and m - don't forget to add comment
-        % Function - naming practices
-        % gt parameters - why?
-        % Ask about different atlasses - where are the files 
-        % Unflatenning function is not working
-        % Do gtr - when? 
+        % Bugs with the methods - listed in the run bench script
+        %
+        % Do results look resonable? 
+        %
+        % Ominbus test - requires atlas and network? 
+        %
+        % Ominbus - Before atlas unique edges yields an empty cluster rep array 
+        %
+        % NBSrun_smn - the last NBSedge_level_parametric_corr had no GLM
+        % assigment and it was not running because of it
+
+    %% TODO
+        % Fix number of subjects in test inference (select based on number)
+        % Fix parametric tests
+        % Add time calculation for saved repetitions
 %%%%%
 
 % Change for test
 
 addpath('/Users/f.cravogomes/Desktop/Cloned Repos/NBS_Calculator')
+
+% Set working directory to the directory of this script
+scriptDir = fileparts(mfilename('fullpath'));
+cd(scriptDir);
 
 a = 10;
 vars = who;       % Get a list of all variable names in the workspace
@@ -23,7 +35,7 @@ data_dir = '/Users/f.cravogomes/Desktop/Cloned Repos/NBS_Calculator/data/s_hcp_f
 if ~exist('Dataset', 'var')
     Dataset = load(data_dir);
 else
-    %disp('Data already loaded')
+    % disp('Data already loaded')
 end
 % Extract dataset name
 [~, data_set_name, ~] = fileparts(data_dir);
@@ -54,17 +66,13 @@ for ti = 1:length(tests)
     RP = infer_test_from_data(RP, OutcomeData.(t), BrainData);
     
     % y_and_x also extracts subject number and sub_ids
+    % Encapsulate this level of setup in a function if there is to much
+    % function calls here 
     [~, Y , RP] = subs_data_from_contrast(RP, OutcomeData.(t).contrast, BrainData);
-
+    [RP.triumask, RP.trilmask] = create_masks_from_nodes(size(RP.mask, 1));
+    
     run_benchmarking(RP, Y)
     
-    % [X, Y] = y_and_x_from_contrast(test_type, Dataset.outcome.test1.contrast, Dataset.outcome, Dataset.brain_data);
-
-    % I will load both X and Y in the run benchmarking I will prepare the
-    % parameters as I need them - data is already in X and Y so I sh
-
-    return;
-
 end
 
 

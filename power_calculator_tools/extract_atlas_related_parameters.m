@@ -7,7 +7,8 @@ function [n_node_nets, trilmask_net, edge_groups] = extract_atlas_related_parame
     trilmask_net = NaN;
 
     % Only apply atlas to the network-based stats
-    if strcmp(RP.cluster_stat_type, 'Constrained') || ...
+    %% ADDED OMNIBUS HERE TO ATLAS - IS THIS CORRECT?????
+    if strcmp(RP.cluster_stat_type, 'Constrained') || strcmp(RP.cluster_stat_type, 'Omnibus') || ...
         strcmp(RP.cluster_stat_type, 'Constrained_FWER')
        
         template_net = summarize_matrix_by_atlas(Y(:, 1), 'suppressimg', 1, 'mask', RP.mask);
@@ -20,7 +21,7 @@ function [n_node_nets, trilmask_net, edge_groups] = extract_atlas_related_parame
         
     else
         % plus 1 because the script expects there to be a "0" (and will subsequently ignore..."
-        edge_groups = 1:length(RP.mask) + 1;
+        edge_groups = sum(RP.mask(:));
 
     end
 

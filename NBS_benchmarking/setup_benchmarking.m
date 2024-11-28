@@ -246,6 +246,7 @@ UI.omnibus_type.ui = RepParams.omnibus_type;
 UI.edge_groups.ui = RepParams.edge_groups;
 UI.use_preaveraged_constrained.ui = RepParams.edge_groups;
 UI.exchange.ui = RepParams.nbs_exchange;
+UI.mask.ui = RepParams.mask;
 % UI.do_Constrained_FWER_second_level.ui=do_Constrained_FWER_second_level;
 
 end

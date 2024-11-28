@@ -231,7 +231,10 @@ UI.edge_groups.ok=1;
 UI.perms.ok=1;
 UI.alpha.ok=1;
 UI.exchange.ok=1;
-    
+
+%% Asing mask to stats NBS
+nbs.STATS.mask = UI.mask.ui;
+
 %Read UI and assign to appropriate structure
 %Connectivity matrices
 if ischar(UI.matrices.ui) % char input so load in by filename
@@ -247,9 +250,9 @@ else % data al
     [nbs.GLM.y,UI.matrices.ok,DIMS]=read_matrices(UI.matrices.ui);
 end
 %Design matrix
-[nbs.GLM.X,UI.design.ok,DIMS]=read_design(UI.design.ui,DIMS); 
+[nbs.GLM.X, UI.design.ok, DIMS] = read_design(UI.design.ui,DIMS); 
 %Contrast
-[nbs.GLM.contrast,UI.contrast.ok]=read_contrast(UI.contrast.ui,DIMS);
+[nbs.GLM.contrast, UI.contrast.ok] = read_contrast(UI.contrast.ui,DIMS);
 %Node coordinates [optional, but mandatory for NBSview]
 if isfield(UI.node_coor,'ui')
     [tmp,UI.node_coor.ok]=read_node_coor(UI.node_coor.ui,DIMS); 
@@ -493,7 +496,8 @@ elseif strcmp(UI.method.ui,'Run Parametric Edge-Level Correction')
         % SMN - no waitbar for cl version
         [nbs.NBS.n,nbs.NBS.con_mat,nbs.NBS.pval,nbs.NBS.edge_stats]=NBSedge_level_parametric_corr(nbs.STATS,1,nbs.GLM);
     else
-        [nbs.NBS.n,nbs.NBS.con_mat,nbs.NBS.pval,nbs.NBS.edge_stats]=NBSedge_level_parametric_corr(nbs.STATS);
+        %% Why was there no GLM HERE? - Ask Steph
+        [nbs.NBS.n,nbs.NBS.con_mat,nbs.NBS.pval,nbs.NBS.edge_stats]=NBSedge_level_parametric_corr(nbs.STATS,1,nbs.GLM);
     end
 end
     
@@ -645,7 +649,7 @@ end
 if ~isempty(data)
     [nr,nc,ns]=size(data); 
     if nr==1 && nc==DIMS.predictors && ns==1 && isnumeric(data) 
-        contrast=data; 
+        contrast = data; 
     else
         ok=0; contrast=[];
     end

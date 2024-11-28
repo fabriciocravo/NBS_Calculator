@@ -1,4 +1,4 @@
-function [any_significant,con_mat,pval,edge_stats__target,cluster_stats__target]=NBSstats_smn(varargin)
+function [any_significant, con_mat, pval, edge_stats__target, cluster_stats__target] = NBSstats_smn(varargin)
 %NBSstats Computes network components among edges that survive a primary 
 %test statistic threshold. Assigns a corrected p-value to each component 
 %using permuted data that has been supplied as part of the structure STATS. 
@@ -78,48 +78,66 @@ end
 if exist('components','file')==2
     %Use components.m provided by MatlabBGL, otherwise use get_components.m
     bgl=1;
-else bgl=0;
+else 
+    bgl=0;
 end
 
 % Set statistic type to numeric - size (extent/intensity) (0), constrained (1), or TFCE (2)
 Intensity=0;
 switch STATS.statistic_type
+
     case 'Size'
         STATS.statistic_type_numeric=1;
         % size of a component measured using extent or intensity?
-        Intensity=strcmp(STATS.size,'Intensity');
+        Intensity = strcmp(STATS.size,'Intensity');
+
     case 'TFCE'
         STATS.statistic_type_numeric=2;
+
     case 'Constrained' % cNBS with FDR correction (Simes)
         STATS.statistic_type_numeric=3; 
+        
     case 'Constrained_FWER' % cNBS with FWER correction (Bonferroni)
         STATS.statistic_type_numeric=4;
+
     case 'SEA' % SEA
         STATS.statistic_type_numeric=5;
+
     case 'Omnibus' % Omnibus
-        
         STATS.statistic_type_numeric=6;
+
         switch STATS.omnibus_type
+
             case 'Threshold_Positive' % Threshold positive
                 STATS.omnibus_type_numeric=1;
+                
             case 'Threshold_Both_Dir' % Threshold positive and negative
                 STATS.omnibus_type_numeric=2;
+
             case 'Average_Positive' % Average positive
                 STATS.omnibus_type_numeric=3;
+
             case 'Average_Both_Dir' % Average absolute value of positive and negative
                 STATS.omnibus_type_numeric=4;
+
             case 'Multidimensional_cNBS' % Multidimensional null - uses network-level test stats to calculate Euclidean distance
                 STATS.omnibus_type_numeric=5;
-            case 'Between_minus_within_cNBS' % Between-network (typically positive in ground truth) minus within-network (typically negative)
+                
+            case 'Between_minus_within_cNBS' % Between-network (typically positive in ground truth) minus within-network (typically negative)  
                 STATS.omnibus_type_numeric=6;
                 error([STATS.omnibus_type, ' under development']);
+
             case 'Multidimensional_all_edges' % Multidimensional null - uses edge-level test stats to calculate Euclidean distance
                 STATS.omnibus_type_numeric=7;
+
             otherwise
                 error(sprintf('Omnibus type %s was provided - not a valid omnibus type.',STATS.statistic_type))
+
         end
+
     otherwise
-        error(sprintf('Statistic type %s was provided - not a valid statistic type. Only ''Size'', ''TFCE'', ''Constrained'', or ''Omnibus'' allowed.',STATS.statistic_type))
+        error(sprintf(['Statistic type %s was provided - not a valid statistic type. Only ''Size'', ''TFCE'', ' ...
+            '''Constrained'', or ''Omnibus'' allowed.'], STATS.statistic_type))
 end
 
 if ~isempty(STATS.test_stat)
@@ -133,6 +151,7 @@ else
     GLM.perms=1;
 end
 
+
 do_parametric_for_2nd_level=NaN;
 if STATS.use_edge_groups
     
@@ -141,34 +160,35 @@ if STATS.use_edge_groups
     do_parametric_for_2nd_level=1; % parametric or nonparametric; TODO: move - should be arg from user
     
     % check mask
-    [STATS.edge_groups,was_mask_flipped]=check_cNBS_mask(STATS.edge_groups);
+    [STATS.edge_groups, was_mask_flipped]=check_cNBS_mask(STATS.edge_groups);
 else
     n_nulls=1;
 end
-null_dist=zeros(K,n_nulls);
+null_dist=zeros(K, n_nulls);
 
 %Index of upper triangular elements of connectivity matrix
-N=STATS.N; % n nodes
-J=N*(N-1)/2; % n edges
+N = STATS.N; % n nodes
+J = N*(N-1)/2; % n edges
 ind_upper=find(triu(ones(N,N),1)); 
-
 
 %% Estimate cluster-level statistics - target and null
 
 % 1. Unpermuted cluster statistics
-y__target=GLM.y; % save for posterity
-GLM=NBSglm_setup_smn(GLM);
-edge_stats__target=get_univariate_stats(STATS,GLM,precomputed,1);
-[cluster_stats__target,max_stat__target]=get_cluster_stats(edge_stats__target,STATS,ind_upper, N, Intensity,bgl);
+y__target = GLM.y; % save for posterity
+GLM = NBSglm_setup_smn(GLM);
+edge_stats__target = get_univariate_stats(STATS,GLM,precomputed,1);
+[cluster_stats__target, max_stat__target] = get_cluster_stats(edge_stats__target,STATS,ind_upper, N, Intensity,bgl);
 
 % 2, Permuted cluster statistics
 %First row of test_stat is the observed test statistics, so start at the second row
 for i=2:K+1
     
-    GLM.y=permute_signal(GLM);
-    edge_stats=get_univariate_stats(STATS,GLM,precomputed,i);
-    [~,max_stat]=get_cluster_stats(edge_stats, STATS, ind_upper, N, Intensity,bgl);
-    null_dist(i-1,:)=max_stat;
+    GLM.y = permute_signal(GLM);
+    edge_stats = get_univariate_stats(STATS, GLM, precomputed, i);
+    [~, max_stat] = get_cluster_stats(edge_stats, STATS, ind_upper, N, Intensity,bgl);
+    
+    % Assign each max stat to the null distribution 
+    null_dist(i-1,:) = max_stat;
     
     % only print every hundred
     if mod((i-1),100)==0
@@ -270,10 +290,12 @@ else
 end
 end
 
-function [cluster_stats,null_stat]=get_cluster_stats(test_stat, STATS, ind_upper, N, Intensity,bgl)
+function [cluster_stats,null_stat] = get_cluster_stats(test_stat, STATS, ind_upper, N, Intensity,bgl)
 % Returns:  cluster_stats_map: edge-wise map of cluster statistics
 %           null_stat: permutation-specific statistic for building the null
-
+%
+% TODO - Output must always be a flat vector! Plase, use STATS mask
+%
 % TODO: note that max is the null test stat for first two stat types but not cNBS - 
 % should these functions instead just return the cluster vals but then do
 % the max outside? Tough bc integrated in the calculation
@@ -311,10 +333,10 @@ switch STATS.statistic_type_numeric
             test_stat_mat(ind_upper)=test_stat;
             test_stat_mat=(test_stat_mat+test_stat_mat');
             
-            cluster_stats=get_constrained_stats(test_stat_mat,STATS.edge_groups);
+            cluster_stats = get_constrained_stats(test_stat_mat, STATS.edge_groups);
         end
 
-        null_stat=cluster_stats; % TODO - this is not a max value but instead 1 val for null per group - think of how to name
+        null_stat = cluster_stats; % TODO - this is not a max value but instead 1 val for null per group - think of how to name
         
     case 5 % do Set Enrichment Analysis (SEA; GSEA minus the G bc not genetics)
         
@@ -324,40 +346,49 @@ switch STATS.statistic_type_numeric
         null_stat=cluster_stats; % TODO - this is not a max value but instead 1 val for null per group - think of how to name
         
     case 6 % do Omnibus
+
         switch STATS.omnibus_type_numeric
             case 1 % Threshold positive
                 cluster_stats=sum(+(test_stat>STATS.thresh));
                 null_stat=cluster_stats;
+
             case 2 % Threshold positive and negative
                 cluster_stats=sum(+(test_stat>STATS.thresh | test_stat<(-STATS.thresh)));
                 null_stat=cluster_stats;
+
             case 3 % Average positive
                 cluster_stats=sum(test_stat(test_stat>0));
                 null_stat=cluster_stats;
+
             case 4 % Average absolute value of positive and negative
                 cluster_stats=sum(abs(test_stat));
                 null_stat=cluster_stats;
+
             case 5 % Multidimensional null
                 % TODO: this should be done (here and above - see case 3) directly from the test_stat without making mat - just need network IDs 
                 test_stat_mat=zeros(N,N);
                 test_stat_mat(ind_upper)=test_stat;
-                test_stat_mat=(test_stat_mat+test_stat_mat');
+                test_stat_mat=(test_stat_mat + test_stat_mat');
 
                 if STATS.use_preaveraged_constrained
-                    cluster_stats=test_stat_mat;
+                    cluster_stats = test_stat_mat;
                 else
-                    cluster_stats=get_constrained_stats(test_stat_mat,STATS.edge_groups);
+                    cluster_stats = get_constrained_stats(test_stat_mat,STATS.edge_groups);
                 end
+                
+                % Honestly, I have no idea how to fix this for now, so I
+                % just cast the output to flat HERE IT IS
+                % cluster_stats = cluster_stats(STATS.mask);
+                null_stat = cluster_stats; % TODO - this is not a max value but instead 1 val for null per group - think of how to name
 
-                null_stat=cluster_stats; % TODO - this is not a max value but instead 1 val for null per group - think of how to name
             case 6 % Multidimensional null
                 % DO NOT USE - UNDER DEVELOPMENT
                 % TODO: this should be done (here and above - see case 3) directly from the test_stat without making mat - just need network IDs 
                 test_stat_mat=zeros(N,N);
                 test_stat_mat(ind_upper)=test_stat;
-                test_stat_mat=(test_stat_mat+test_stat_mat');
+                test_stat_mat=(test_stat_mat + test_stat_mat');
 
-                cluster_stats=get_constrained_stats(test_stat_mat,STATS.edge_groups);
+                cluster_stats=get_constrained_stats(test_stat_mat, STATS.edge_groups);
 
                 null_stat=cluster_stats; % TODO - this is not a max value but instead 1 val for null per group - think of how to name
         
