@@ -64,11 +64,14 @@ Params.n_frames.REST=1200;
 Params.n_frames.REST2=1200;
 
 %%% Resampling parameters %%%
-Params.n_workers = 3; % num parallel workers for parfor, best if # workers = # cores
+Params.n_workers = 4; % num parallel workers for parfor, best if # workers = # cores
 Params.mapping_category = 'subnetwork'; % for cNBS
 Params.n_repetitions = 500;  % 500 recommended
 Params.n_subs_subset = 40;   % 40 | 80 | 120
-Params.list_of_nsubset = {40, 80, 120}; % To change this, add more when necessary
+
+%% List of subjects per subset
+Params.list_of_nsubset = {20, 40, 80, 120}; % To change this, add more when necessary
+Params.list_of_nsubset = {40}; % Redefined because I need a base with all 40 first
                     % size of subset is full group size (N=n*2 for two sample t-test or N=n for one-sample)
 
 

@@ -1,6 +1,6 @@
 function [FWER_rep, edge_stats_rep, pvals_rep, cluster_stats_rep, ...
           FWER_rep_neg, edge_stats_rep_neg, pvals_rep_neg, cluster_stats_rep_neg] = ...
-          pf_repetition_loop(i_rep, ids_sampled, switch_task_order, RepParams, UI, X_rep, Y)
+          pf_repetition_loop(i_rep, ids_sampled, switch_task_order, RP, UI, X_rep, Y)
 
     %
     % Description:
@@ -15,7 +15,7 @@ function [FWER_rep, edge_stats_rep, pvals_rep, cluster_stats_rep, ...
     %   ids_sampled - random subset of subject ids to be used for this
     %   repetion
     %   switch_task_order - list with task order for each rep
-    %   RepParams - repetition parameters
+    %   RP - repetition parameters
     %   UI - struct that configures nbs
     % 
     % Ouput Arguments:
@@ -28,19 +28,19 @@ function [FWER_rep, edge_stats_rep, pvals_rep, cluster_stats_rep, ...
     % Extract data points for this repetion 
     Y_rep = Y(:, rep_sub_ids);
      
-    if RepParams.use_both_tasks 
+    if RP.use_both_tasks 
          
         Y_rep = pf_paired_atlas_order(Y_rep, ...
-                                      RepParams.mapping_category, ...
-                                      RepParams.mask, RepParams.do_TPR, switch_task_order, ...
-                                      RepParams.n_subs_subset); 
+                                      RP.mapping_category, ...
+                                      RP.mask, RP.do_TPR, switch_task_order, ...
+                                      RP.n_subs_subset); 
             
     else
 
         Y_rep = pf_sinle_atlas_order(Y_rep, i_rep, ...
-                                     RepParams.mapping_category, RepParams.mask, ...
+                                     RP.mapping_category, RP.mask, ...
                                      switch_task_order);
-
+        
     end
 
     % Assign setup_benchmark parameters to new UI
@@ -49,7 +49,7 @@ function [FWER_rep, edge_stats_rep, pvals_rep, cluster_stats_rep, ...
     % Set this repetition design matrix and Y_rep 
     UI_new.design.ui = X_rep;
     UI_new.matrices.ui = Y_rep;
-    UI_new.contrast.ui = RepParams.nbs_contrast;  
+    UI_new.contrast.ui = RP.nbs_contrast;  
     
     nbs = NBSrun_smn(UI_new);
     
@@ -58,7 +58,7 @@ function [FWER_rep, edge_stats_rep, pvals_rep, cluster_stats_rep, ...
     
     % Change constrast to negative one 
     UI_new_neg = UI_new;
-    UI_new_neg.contrast.ui = RepParams.nbs_contrast_neg;
+    UI_new_neg.contrast.ui = RP.nbs_contrast_neg;
 
     nbs_neg = NBSrun_smn(UI_new_neg);
     
@@ -73,15 +73,15 @@ function [FWER_rep, edge_stats_rep, pvals_rep, cluster_stats_rep, ...
     end
 
     % record everything
-    if strcmp(RepParams.cluster_stat_type,'FDR') || contains(RepParams.cluster_stat_type,'Parametric')
+    if strcmp(RP.cluster_stat_type,'FDR') || contains(RP.cluster_stat_type,'Parametric')
 
 	    % Note: NBS's FDR does not return corrected p-values, only significant edges 
         % (con_mat)--assigning significant edges to a pvalue of "0" and 
         % non-significant to pvalue "1" JUST for summarization purposes
-        edge_stats_rep = nbs.NBS.test_stat(triumask);
+        edge_stats_rep = nbs.NBS.test_stat(RP.triumask);
         pvals_rep = ~nbs.NBS.con_mat{1}(:); % see above note 
         
-        edge_stats_rep_neg = nbs_neg.NBS.test_stat(triumask);
+        edge_stats_rep_neg = nbs_neg.NBS.test_stat(RP.triumask);
         pvals_rep_neg = ~nbs_neg.NBS.con_mat{1}(:);  % see above note
         
         % This is not generated for this stats test, so I just output an
