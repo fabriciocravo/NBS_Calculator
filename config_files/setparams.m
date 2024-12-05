@@ -64,7 +64,8 @@ Params.n_frames.REST=1200;
 Params.n_frames.REST2=1200;
 
 %%% Resampling parameters %%%
-Params.n_workers = 4; % num parallel workers for parfor, best if # workers = # cores
+Params.n_workers = 10; % num parallel workers for parfor, best if # workers = # cores
+Params.parallel = 1; % run stuff sequentially or in parallel
 Params.mapping_category = 'subnetwork'; % for cNBS
 Params.n_repetitions = 500;  % 500 recommended
 Params.n_subs_subset = 40;   % 40 | 80 | 120
@@ -117,9 +118,9 @@ Params.use_preaveraged_constrained = 0; % 1 | 0
 %%%%% DEVELOPERS ONLY %%%%%
 % Use a small subset of permutations for faster development -- inappropriate for inference
 
-Params.testing = 1;
+Params.testing = 0;
 Params.test_n_perms = '20';
 Params.test_n_repetitions = 20;
-Params.test_n_workers = 5;
+Params.test_n_workers = 8;
 
 end

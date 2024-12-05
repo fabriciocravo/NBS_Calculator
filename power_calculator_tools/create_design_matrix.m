@@ -20,6 +20,11 @@ function X = create_design_matrix(varargin)
 
     switch test_type
         
+        case 't'
+            
+            X = ones(n_subs, 1);
+            
+        
         case 't2' 
             
             if n_subs_1 == -1 || n_subs_2 == -1
@@ -35,7 +40,7 @@ function X = create_design_matrix(varargin)
             X(1:n_subs_1, 1) = 1;
             X(n_subs_1:n_subs_1 + n_subs_2, 2) = 1;
 
-        case 't'
+        case 'pt'
 
             X = zeros(n_subs * 2, n_subs + 1);
             X(1:n_subs, 1) = 1;

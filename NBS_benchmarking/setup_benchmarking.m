@@ -54,8 +54,11 @@ switch RepParams.cluster_stat_type
 
 end
 
-%% Check expected inclusion of resting tasks
-if RepParams.use_both_tasks
+
+%% Check expected inclusion of resting tasks - Remove it? - It's not necessary anymore
+% We now infere the test type from the data, so we check the dataset for
+% the tasks
+if RepParams.use_both_tasks && false
     if RepParams.do_TPR
         if ~contains(RepParams.task2, 'REST') 
         %if ~(strcmp(task2,'REST') || strcmp(task2,'REST2'))

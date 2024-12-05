@@ -1,20 +1,10 @@
 %%%%%
-    % Power Calculator
-        % Bugs with the methods - listed in the run bench script
-        %
-        % Do results look resonable? 
-        %
-        % Ominbus test - requires atlas and network? 
-        %
-        % Ominbus - Before atlas unique edges yields an empty cluster rep array 
-        %
-        % NBSrun_smn - the last NBSedge_level_parametric_corr had no GLM
-        % assigment and it was not running because of it
-
-    %% TODO
-        % Fix number of subjects in test inference (select based on number)
-        % Fix parametric tests
-        % Add time calculation for saved repetitions
+    %% Questions
+        % - subtraction and t-test is way more computationally efficient than
+        % paired -t
+        % - started calculations
+        % - in create_test_contrast
+            % nbs_exchange for t test? what is it? 
 %%%%%
 
 % Change for test
@@ -68,10 +58,14 @@ for ti = 1:length(tests)
     % y_and_x also extracts subject number and sub_ids
     % Encapsulate this level of setup in a function if there is to much
     % function calls here 
-    [~, Y , RP] = subs_data_from_contrast(RP, OutcomeData.(t).contrast, BrainData);
+    [X, Y , RP] = subs_data_from_contrast(RP, OutcomeData.(t).contrast, BrainData);
     [RP.triumask, RP.trilmask] = create_masks_from_nodes(size(RP.mask, 1));
-    
+
     run_benchmarking(RP, Y)
+
+    if RP.testing == 1 && ti == 2
+        return;
+    end
     
 end
 
