@@ -66,10 +66,14 @@ function [FWER_rep, edge_stats_rep, pvals_rep, cluster_stats_rep, ...
     % check for any positives (if there was no ground truth effect, this goes into the FWER calculation)
     if nbs.NBS.n > 0
         FWER_rep = 1;
+    else
+        FWER_rep = 0;
     end
 
     if nbs_neg.NBS.n > 0
         FWER_rep_neg = 1;
+    else
+        FWER_rep_neg = 0;
     end
 
     % record everything

@@ -18,7 +18,33 @@ function run_benchmarking(RP, Y)
     %'Constrained', 'Constrained_FWER', 'Omnibus'};
   
     % RP.list_of_nsubset = {40};
+
+    %% SET Par enviroment
     
+    % using parfor which requires Parallel Computing Toolbox, 
+    % but if can't get it set to 1 worker in setparams
+    % If works are not setup, MatLab runs the parfor
+    % sequentially 
+    if RP.parallel
+        % Setup parallel environment
+        c = parcluster('local'); 
+        if RP.n_workers > c.NumWorkers
+            fprintf('Specified %d workers but only %d available. Setting to max available.\n', ...
+                RP.n_workers, c.NumWorkers);
+            RP.n_workers = c.NumWorkers;
+        end
+        
+        % Check if a parallel pool exists and delete it
+        if ~isempty(gcp('nocreate'))
+            fprintf('Deleting existing parallel pool...\n');
+            delete(gcp('nocreate'));
+        end
+
+        % Create a new parallel pool
+        fprintf('Starting parallel pool with %d workers...\n', RP.n_workers);
+        parpool(RP.n_workers);
+    end
+
 
     for stat_id=1:length(RP.all_cluster_stat_types)
         RP.cluster_stat_type = RP.all_cluster_stat_types{stat_id};
@@ -112,27 +138,30 @@ function run_benchmarking(RP, Y)
                 % both t and t2 must have the same sample sizes for this to
                 % work properly     
                 for r=1:RP.n_repetitions
-                
-                    if RP.use_both_tasks
-        
-                        if RP.test_type == 't'
+                    
+                    switch RP.test_type
+                        
+                        case 'pt'
+
                             ids = randperm(RP.n_subs, RP.n_subs_subset)';
                             ids = [ids; ids + RP.n_subs];
-                        else
+
+                        case 't2'
+                            
                             ids_1 = randperm(RP.n_subs_1, floor(RP.n_subs_subset/2));
                             ids_2 = randperm(RP.n_subs - RP.n_subs_1 + 1, ceil(RP.n_subs_subset/2)) + (RP.n_subs_1 - 1);
 
                             ids = [ids_1; ids_2];
-                        end
-        
-                    else
-        
-                        ids=randperm(RP.n_subs, RP.n_subs_subset)';
+
+                        otherwise 
+
+                            ids=randperm(RP.n_subs, RP.n_subs_subset)';
+
                     end
-        
+      
                     ids_sampled(:,r)=ids;
-                end       
-             
+
+                end                  
                
                 % if FPR, set up random task order
                 % Note that we don't want to use balanced perms (cf. Southworth et al., Properties of Balanced Permutations)
@@ -146,23 +175,8 @@ function run_benchmarking(RP, Y)
                 else
                     % Don't 
                     switch_task_order = [];
-                end
-               
-                
-                %% Run NBS repetitions
-                % using parfor which requires Parallel Computing Toolbox, but if can't get it set to 1 worker in setparams
-                
-                % Disabled for now
-                c = parcluster('local'); 
-                if RP.n_workers>c.NumWorkers && false
-                    fprintf('Specified %d workers but only %d available. Setting to max available.\n', ...
-                        RP.n_workers,c.NumWorkers);
-                    RP.n_workers=c.NumWorkers;
-                end
-        
-                %if isempty(gcp('nocreate'))
-                %    my_pool = parpool(RP.n_workers);
-                %end % set from here bc doesn't limit to the specified n streams on server
+                end          
+              
                 
                 if RP.testing
                     fprintf('\n*** TESTING MODE ***\n\n')
@@ -170,9 +184,11 @@ function run_benchmarking(RP, Y)
                 
                 % fprintf(['Starting benchmarking - ', RP.task1, '_v_', RP.task2, '::', UI.statistic_type.ui, RP.omnibus_str, '.\n']);
                
-
-                % parfor (i_rep=1: RP.n_repetitions)
-                for i_rep = 1:RP.n_repetitions
+                %% Run NBS repetitions
+                
+                % Be careful with this parfor commented lol
+                parfor (i_rep=1: RP.n_repetitions)
+                % for i_rep = 1:RP.n_repetitions
                     
                     % Encapsulation of the most computationally intensive loop
                     [FWER_rep, edge_stats_all_rep, pvals_all_rep, cluster_stats_all_rep, ...
