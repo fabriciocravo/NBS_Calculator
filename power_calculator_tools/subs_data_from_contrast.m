@@ -1,14 +1,14 @@
 function [X, Y, RP] = subs_data_from_contrast(RP, contrast, BrainData)
     
-    %% To Optimize use create_design_matrix function for X
+    %% TODO: To Optimize use create_design_matrix function for X
     
     % Get sub ids from contrast
     % Maybe this changes? I don't know if all contrasts have two elements
     sub_ids_cond1 = BrainData.(contrast{1}).sub_ids;
     sub_ids_cond2 = BrainData.(contrast{2}).sub_ids;
+    RP.test_name = strcat(contrast{1}, '_', contrast{2});
     
     switch RP.test_type
-
 
         case 't'
 
@@ -36,7 +36,8 @@ function [X, Y, RP] = subs_data_from_contrast(RP, contrast, BrainData)
             
             % Use only subjects unique to each condition
             xor_sub_ids = setxor(sub_ids_cond1, sub_ids_cond2);
-
+            
+            %% MINOR TODO: Don't discart repetead subjects add them to diff tasks 
             % Update the respective subject lists
             RP.sub_ids_cond1 = intersect(sub_ids_cond1, xor_sub_ids); % Unique to cond1
             RP.sub_ids_cond2 = intersect(sub_ids_cond2, xor_sub_ids); % Unique to cond2

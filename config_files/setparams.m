@@ -118,7 +118,7 @@ Params.use_preaveraged_constrained = 0; % 1 | 0
 %%%%% DEVELOPERS ONLY %%%%%
 % Use a small subset of permutations for faster development -- inappropriate for inference
 
-Params.testing = 0;
+Params.testing = 1;
 Params.test_n_perms = '20';
 Params.test_n_repetitions = 20;
 Params.test_n_workers = 8;
