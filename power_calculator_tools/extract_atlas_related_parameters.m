@@ -21,6 +21,7 @@ function [n_node_nets, trilmask_net, edge_groups] = extract_atlas_related_parame
         
     else
         % plus 1 because the script expects there to be a "0" (and will subsequently ignore..."
+        %% TODO set edge groups to NaN if no atlas 
         edge_groups = sum(RP.mask(:));
 
     end

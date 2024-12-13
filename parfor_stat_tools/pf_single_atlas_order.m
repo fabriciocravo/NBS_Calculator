@@ -19,7 +19,8 @@ function Y_rep = pf_single_atlas_order(Y_rep, i_rep, ...
     %        m_test(:,i) = task_flipper * util_extract_subject_data(Brain_Data, task_1, rep_sub_ids);
     %    end
     %else
-
+    
+    %% TODO: Move this
     for i = 1:n_subs_subset
         temp_y = Y_rep(:, i);
         temp_y = util_unflatten_diagonal(temp_y);

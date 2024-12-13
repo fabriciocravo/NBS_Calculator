@@ -24,7 +24,6 @@ function X = create_design_matrix(varargin)
             
             X = ones(n_subs, 1);
             
-        
         case 't2' 
             
             if n_subs_1 == -1 || n_subs_2 == -1
@@ -51,6 +50,10 @@ function X = create_design_matrix(varargin)
                 X(n_subs + i, i + 1) = 1;
             end
 
+        % case 'r'
+            % can't define here - must wait to subsample data
+            % X=brain;
+            % y=score;
     end
         
 end

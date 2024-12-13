@@ -29,6 +29,7 @@ function RP = infer_test_from_data(RP, TestData, BrainData)
         sub_ids_cond1 = test.sub_ids(test_type.score == unique_conditions(1));
         sub_ids_cond2 = test.sub_ids(test_type.score == unique_conditions(2));
         
+        %% TODO: Divided by the two - focus on group sizes
         n_equal = numel(intersect(sort(sub_ids_cond1), sort(sub_ids_cond2)));
         n_unique = numel(setxor(sub_ids_cond1, sub_ids_cond2));
  
@@ -53,7 +54,8 @@ function RP = infer_test_from_data(RP, TestData, BrainData)
                 
                 sub_ids_cond1 = BrainData.(TestData.contrast{1}).sub_ids;
                 sub_ids_cond2 = BrainData.(TestData.contrast{2}).sub_ids;
-
+                
+                %% TODO: Divided by the two - focus on group sizes
                 n_equal = numel(intersect(sort(sub_ids_cond1), sort(sub_ids_cond2)));
                 n_unique = numel(setxor(sub_ids_cond1, sub_ids_cond2));  
                 
