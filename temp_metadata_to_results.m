@@ -29,7 +29,8 @@ for i = 1:length(matFiles)
     dummy = strsplit(data_info{1}, '_');
     dataset = dummy{2};
     map = dummy{3};
-    components = strsplit(data_info{3}, '_');
+    test_type = data_info{3};
+    components = strsplit(data_info{2}, '_');
     disp(data_info)
 
     if ~strcmp(data_info{4}, 'nobus')
@@ -43,9 +44,9 @@ for i = 1:length(matFiles)
     % For the current data - all tests were t tests - however, please
     % change if this script is ever needed for something else
     WithMeta = add_meta_data_to_repetition_data(data, 'dataset', dataset, 'map', map, ...
-                                                'test', 't', 'components', components, ...
+                                                'test', 't', 'test_components', components, ...
                                                 'omnibus', omnibus_type, 'subject_number', subject_number, ...
-                                                'testing_code', false);
+                                                'testing_code', false, 'test_type', test_type);
     
     [~, f_name, f_ext] = fileparts(file_path);
     output_dir = [save_dir, f_name, f_ext];
