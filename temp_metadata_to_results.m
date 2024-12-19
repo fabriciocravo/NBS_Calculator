@@ -43,10 +43,14 @@ for i = 1:length(matFiles)
 
     % For the current data - all tests were t tests - however, please
     % change if this script is ever needed for something else
+    rep_parameters = data.RP;
+    data = rmfield(data, 'RP');
+
     WithMeta = add_meta_data_to_repetition_data(data, 'dataset', dataset, 'map', map, ...
                                                 'test', 't', 'test_components', components, ...
                                                 'omnibus', omnibus_type, 'subject_number', subject_number, ...
-                                                'testing_code', false, 'test_type', test_type);
+                                                'testing_code', false, 'test_type', test_type, ...
+                                                'rep_parameters', rep_parameters);
     
     [~, f_name, f_ext] = fileparts(file_path);
     output_dir = [save_dir, f_name, f_ext];
