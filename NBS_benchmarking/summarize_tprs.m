@@ -1,4 +1,6 @@
-function summarize_tprs(summary_type, varargin)
+function summarize_tprs(summary_type, rep_data, GtData, varargin)
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % This script summarizes results data to ultimately compare true positive
 % rates across levels of inference.
@@ -19,8 +21,11 @@ function summarize_tprs(summary_type, varargin)
 %                           relies on completion of 'tpr'
 %
 % Usage 1. 'positives'
-%   summarize_tprs('positives','tasks',{'SOCIAL_v_REST'},'stat_types',{'Size_Extent'},'grsize',40,'make_figs',0,'save_logs',0);
-%   Task choices: SOCIAL_v_REST; WM_v_REST; GAMBLING_v_REST; RELATIONAL_v_REST; EMOTION_v_REST; MOTOR_v_REST; GAMBLING_v_REST
+%  summarize_tprs('positives', 'tasks', {'SOCIAL_v_REST'}, 'stat_types', {'Size_Extent'}, 'grsize', 40, 'make_figs', 0,
+% 'save_logs',0);
+%
+% Task choices: SOCIAL_v_REST; WM_v_REST; GAMBLING_v_REST; RELATIONAL_v_REST; EMOTION_v_REST; MOTOR_v_REST; 
+% GAMBLING_v_REST
 %
 % Usage 2. 'visualize_tpr'
 %   summarize_tprs('visualize_tpr','grsize',120,'save_figs',0,'save_logs',0, 'do_combined',0);
@@ -42,77 +47,100 @@ function summarize_tprs(summary_type, varargin)
 
 %% SET PATHS/FUNCTIONS & DEFAULTS
 
-[current_path,~,~]=fileparts(mfilename('fullpath')); % assuming current folder is NBS_benchmarking
+[current_path,~,~] = fileparts(mfilename('fullpath')); % assuming current folder is NBS_benchmarking
 addpath(genpath(['../',current_path])); % need to add the complete script dir to get the config files
 do_fpr = 0;
-setpaths;
+
+% sepaths - set up data_dir, output_dir and nbs_directory 
+% setpaths;
+% set some parameters - similar to setparams function 
 setparams_summary;
-summary_tools; % contains summary functions
+
+% This is not necessary - the methods of the class are all static. Just
+% call the class script directly
+% summary_tools;
 
 
 %% PARSE PARAMETERS
 
 % parse user input
-% something is up with the validator when I added this required arg, so I removed (i.e.,   ,@(x)validateattributes(x,{'char','cell'},{'nonempty'})   )
+% something is up with the validator when I added this required arg, so I removed (i.e.,   ,
+% @(x)validateattributes(x,{'char','cell'},{'nonempty'})   )
 
 p = inputParser;
 % addOptional(p,'summary_type',summary_type_default);
 addRequired(p,'summary_type');
-addOptional(p,'tasks',all_tasks);
-addOptional(p,'stat_types',all_stat_types);
-addOptional(p,'grsize',grsize_default);
-addOptional(p,'save_dcoeff',save_settings.defaults.save_dcoeff);
+addOptional(p,'tasks', all_tasks);
+addOptional(p,'stat_types', all_stat_types);
+addOptional(p,'grsize', grsize_default);
+addOptional(p,'save_dcoeff', save_settings.defaults.save_dcoeff);
 addOptional(p,'save_benchmarking_summary',save_settings.defaults.save_benchmarking_summary);
-addOptional(p,'save_figs',save_settings.defaults.save_figs);
-addOptional(p,'save_logs',save_settings.defaults.save_logs);
-addOptional(p,'save_summarized_data',save_settings.defaults.save_summarized_data);
-addOptional(p,'make_figs',make_figs_default);
-addOptional(p,'do_combined',do_combined_default);
-addOptional(p,'special_prefix',special_prefix_default);
-addOptional(p,'tpr_dthresh',tpr_dthresh_default);
-parse(p,summary_type,varargin{:});
+addOptional(p,'save_figs', save_settings.defaults.save_figs);
+addOptional(p,'save_logs', save_settings.defaults.save_logs);
+addOptional(p,'save_summarized_data', save_settings.defaults.save_summarized_data);
+addOptional(p,'make_figs', make_figs_default);
+addOptional(p,'do_combined', do_combined_default);
+addOptional(p,'special_prefix', special_prefix_default);
+addOptional(p,'tpr_dthresh', tpr_dthresh_default);
+parse(p, summary_type, varargin{:});
 
 % summary_type=p.Results.summary_type;
-tasks=p.Results.tasks;
-stat_types=p.Results.stat_types;
-grsize=p.Results.grsize; % used in setting files and param
-save_settings.do.save_dcoeff=p.Results.save_dcoeff;
-save_settings.do.save_benchmarking_summary=p.Results.save_benchmarking_summary;
-save_settings.do.save_figs=p.Results.save_figs;
-save_settings.do.save_logs=p.Results.save_logs;
-save_settings.do.save_summarized_data=p.Results.save_summarized_data;
-make_figs=p.Results.make_figs;
-pp.do_combined=p.Results.do_combined;
-special_prefix=p.Results.special_prefix;
-tpr_dthresh=p.Results.tpr_dthresh;
-if pp.do_combined; make_figs=0; else; make_figs=p.Results.make_figs; end
-if class(stat_types)=='char'; stat_types={stat_types}; end
+tasks = p.Results.tasks;
+stat_types = p.Results.stat_types;
+grsize = p.Results.grsize; % used in setting files and param
+save_settings.do.save_dcoeff = p.Results.save_dcoeff;
+save_settings.do.save_benchmarking_summary = p.Results.save_benchmarking_summary;
+save_settings.do.save_figs = p.Results.save_figs;
+save_settings.do.save_logs = p.Results.save_logs;
+save_settings.do.save_summarized_data = p.Results.save_summarized_data;
+make_figs = p.Results.make_figs;
+pp.do_combined = p.Results.do_combined;
+special_prefix = p.Results.special_prefix;
+tpr_dthresh = p.Results.tpr_dthresh;
+
+
+if pp.do_combined
+    make_figs = 0;
+else 
+    make_figs = p.Results.make_figs; 
+end
+
+if ischar(class(stat_types))
+    stat_types={stat_types};
+end
 
 
 %% SETUP
 
 % check requirements and silence some warnings
 if make_figs || save_settings.do.save_logs % Check for curve fitting toolbox, required for figs or log
-    v_=ver;
+    v_ = ver;
     [installedToolboxes{1:length(v_)}] = deal(v_.Name);
     curve_toolbox_exists = all(ismember('Curve Fitting Toolbox',installedToolboxes));
     if ~curve_toolbox_exists
-        error('Curve fitting toolbox required for making summary figures, logs, or combining tasks but not installed. Please re-run with the toolbox installed OR with options ''make_figs'' and ''ings.do.save_logs'' set to 0.');
+        error(['Curve fitting toolbox required for making summary figures, logs, ' ...
+               'or combining tasks but not installed.' ...
+               'Please re-run with the toolbox installed OR with options ''make_figs'' and ''ings.do.save_logs'' ' ...
+               'set to 0.']);
     end
 end
 warning('off', 'STRUCTURE_DATA:ASSUME_LOWER_TRI');
 warning('off', 'SPLINES:CHCKXYWP:NaNs');
 
-% set up a single mapping from statistic type to level of inference to ground truth level based on separate definitions in setparams
+
+% set up a single mapping from statistic type to level of inference to ground truth level based on separate 
+% definitions in setparams
 % stat_level_map: stat_types to stat_levels_str to stat_gt_levels to stat_gt_levels_str
 
 % stat_level_map.do_overlay=1; %TODO: set as user-defined param
 
-stat_level_map.stat_types=all_stat_types;
-stat_level_map.stat_levels_str=all_stat_types;
+stat_level_map.stat_types = all_stat_types;
+stat_level_map.stat_levels_str = all_stat_types;
+% Why is this map here? It maps method names to other method names
 for s=1:size(stats_levelstr_map,1)
-%     stat_level_map.stat_levels_str{contains(stat_level_map.stat_levels_str,stats_levelstr_map{s,1})}=stats_levelstr_map{s,2};
-    stat_level_map.stat_levels_str{strcmp(stat_level_map.stat_levels_str,stats_levelstr_map{s,1})}=stats_levelstr_map{s,2};
+  
+    stat_level_map.stat_levels_str{strcmp(stat_level_map.stat_levels_str, ...
+                                   stats_levelstr_map{s,1})} = stats_levelstr_map{s,2};
 end
 
 stat_level_map.stat_gt_levels=zeros(1,length(stat_level_map.stat_levels_str));
@@ -135,50 +163,28 @@ end
 %% MAIN
 
 switch summary_type
-    
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% CALCULATE GROUND TRUTH EFFECT SIZE
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-case 'dcoeff'
-fprintf('** Calculating d-coefficients **\n');
-
-for t=1:length(tasks)
-    
-    task=tasks{t};
-    fprintf(['Doing: ',task,'\n'])
-    
-    % calculate and save d-coefficients
-    set_datetimestr_and_files; % set datetimestr for specified task, stat_type, data_source
-    save_settings = summary_tools.calculate_dcoefficients(ground_truth_filename,stat_level_map,ground_truth_dcoeff_filename,save_settings);
-    
-end
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CALCULATE POSITIVES
 % note: this is the only one where individual stat_types can be specificied
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-case 'positives'
-fprintf('**** Calculating positives ****\n');
+    case 'positives'
+    
+    % There is only one task and one stat type per calculation now
+    for t=1:length(tasks)
+        for s=1:length(stat_types)
+            
+            task=tasks{t};
+            stat_type=stat_types{s};
 
-for t=1:length(tasks)
-    for s=1:length(stat_types)
-        
-        task=tasks{t};
-        stat_type=stat_types{s};
-        fprintf(['Doing: ',task,'::',stat_type,'\n'])
-        
-        % calculate and save tpr (checking before saving is built in)
-        set_datetimestr_and_files; % set datetimestr for specified task, stat_type, data_source
-        %if ~exist(summary_output_dir,'dir'); mkdir(summary_output_dir); end
-        save_settings=summary_tools.calculate_positives(results_filename,benchmarking_summary_filename,save_settings);
-       
+            % calculate and save tpr (checking before saving is built in)
+            save_settings = summary_tools.calculate_positives(rep_data, save_settings);
+
+            error('The code is buggy - Fix the tasks and stat_types loop')
+                       
+        end
     end
-end
-
-
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CALCULATE AND AGGREGATE TRUE POSITIVES
@@ -186,49 +192,53 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 case 'calculate_tpr'
-fprintf('**** Aggregating true positives ****\n');
-if ~use_preaveraged_constrained
-if length(tasks)<length(all_tasks)
-    error('Not enough tasks specified to combine all.')
-end
-end
-
-for t=1:length(tasks)
-    for s=1:length(stat_types)
-
-        task=tasks{t};
-        stat_type=stat_types{s};
-        this_stat_level_str=stat_level_map.stat_levels_str{strcmp(stat_level_map.stat_types,stat_type)};
-        this_stat_gt_level_str=stat_level_map.stat_gt_levels_str{strcmp(stat_level_map.stat_types,stat_type)};
-        fprintf(['Doing: ',task,'::',stat_type,'\n'])
-
-        % set files for specified task, stat_type, data_source and make output
-        set_datetimestr_and_files;
-
-        if use_preaveraged_constrained
-            this_stat_level_str='edge';
-            this_stat_gt_level_str='edge';
+    fprintf('**** Aggregating true positives ****\n');
+    if ~use_preaveraged_constrained
+        if length(tasks)<length(all_tasks)
+            error('Not enough tasks specified to combine all.')
         end
-
-        % need original bench results for summary in edge_groups - TODO: save edge_groups into summary matfile
-        if strcmp(this_stat_gt_level_str,'network')
-            if exist(results_filename,'file')
-                load(results_filename,'UI');
-                edge_groups=UI.edge_groups.ui;
-            else
-                warning('Loading edge groups from edge groups file, not from original results.');
-                load(edge_groups_filename,'edge_groups');
-            end
-        else
-            edge_groups=[];
-        end
-        
-        % calculate true positives
-        [dcoeff.(stat_types{s})(:,t),tpr.(stat_types{s})(:,t),fpr.(stat_types{s})(:,t),fwer_strong.(stat_types{s})(t),fdr.(stat_types{s})(:,t),localizing_power.(stat_types{s})(t),num_fp.(stat_types{s})(:,t),spatial_extent_fp.(stat_types{s})(:,t),log_data.(stat_types{s}).(tasks{t})]...
-            =summary_tools.calculate_tpr(benchmarking_summary_filename,ground_truth_dcoeff_filename,this_stat_level_str,this_stat_gt_level_str,pp.remove_matrix_diag,edge_groups,tpr_dthresh);
-        % TODO: remove the fwer_strong here bc it's already passed to log_data
     end
-end
+
+    for t=1:length(tasks)
+        for s=1:length(stat_types)
+    
+            task=tasks{t};
+            stat_type=stat_types{s};
+            this_stat_level_str=stat_level_map.stat_levels_str{strcmp(stat_level_map.stat_types,stat_type)};
+            this_stat_gt_level_str=stat_level_map.stat_gt_levels_str{strcmp(stat_level_map.stat_types,stat_type)};
+            fprintf(['Doing: ',task,'::',stat_type,'\n'])
+    
+            % set files for specified task, stat_type, data_source and make output
+            set_datetimestr_and_files;
+    
+            if use_preaveraged_constrained
+                this_stat_level_str='edge';
+                this_stat_gt_level_str='edge';
+            end
+    
+            % need original bench results for summary in edge_groups - TODO: save edge_groups into summary matfile
+            if strcmp(this_stat_gt_level_str,'network')
+                if exist(results_filename,'file')
+                    load(results_filename,'UI');
+                    edge_groups=UI.edge_groups.ui;
+                else
+                    warning('Loading edge groups from edge groups file, not from original results.');
+                    load(edge_groups_filename,'edge_groups');
+                end
+            else
+                edge_groups=[];
+            end
+            
+            % calculate true positives
+            [dcoeff.(stat_types{s})(:,t), tpr.(stat_types{s})(:,t), fpr.(stat_types{s})(:,t), ...
+             fwer_strong.(stat_types{s})(t),fdr.(stat_types{s})(:,t),localizing_power.(stat_types{s})(t), ...
+             num_fp.(stat_types{s})(:,t),spatial_extent_fp.(stat_types{s})(:,t),log_data.(stat_types{s}).(tasks{t})] ...
+             = summary_tools.calculate_tpr(benchmarking_summary_filename, ...
+             ground_truth_dcoeff_filename, this_stat_level_str, ...
+             this_stat_gt_level_str, pp.remove_matrix_diag,edge_groups,tpr_dthresh);
+            % TODO: remove the fwer_strong here bc it's already passed to log_data
+        end
+    end
 
 % TODO: remove
 % save(sprintf('/Volumes/GoogleDrive/My Drive/Lab/Misc/Software/scripts/Matlab/myscripts/fwer_fdr_lp_indvid_files/lp_fp_gr%d',grsize),'fdr','num_fp','spatial_extent_fp','-append')

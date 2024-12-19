@@ -8,6 +8,7 @@ function WithMeta = add_meta_data_to_repetition_data(varargin)
     % Default is NaN for all non required
     addRequired(p, 'data'); % The data itself 
     addParameter(p, 'dataset', NaN, @ischar); 
+    addParameter(p, 'rep_parameters', NaN, @isstruct)
     addParameter(p, 'map', NaN, @ischar); 
     addParameter(p, 'test', NaN, @ischar); 
     addParameter(p, 'test_type', NaN, @ischar);
@@ -23,6 +24,7 @@ function WithMeta = add_meta_data_to_repetition_data(varargin)
     data = p.Results.data;
 
     dataset = p.Results.dataset;
+    rep_parameters = p.Results.rep_parameters;
     map = p.Results.map;
     test = p.Results.test;
     test_type = p.Results.test_type;
@@ -35,6 +37,7 @@ function WithMeta = add_meta_data_to_repetition_data(varargin)
     WithMeta.brain_data = data;
 
     WithMeta.meta_data.dataset = dataset;
+    WithMeta.meta_data.rep_parameters = rep_parameters;
     WithMeta.meta_data.map = map;
     WithMeta.meta_data.test = test;
     WithMeta.meta_data.test_type = test_type;

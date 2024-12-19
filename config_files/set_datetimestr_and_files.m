@@ -13,7 +13,6 @@ date_time_str_now=datestr(now,'mmddyyyy');
 
 
 
-
 %%%%%%%% Ground truth %%%%%%%%
 
 % Task versus rest
