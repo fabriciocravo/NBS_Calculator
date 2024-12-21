@@ -189,31 +189,19 @@ end
 %% -------------------------------------------------------------------------%
 % ******** Calculate true positives **********
 function [dcoeff,tpr,fpr,fwer_strong,fdr,localizing_power,num_fp,spatial_extent_fp,log_data] = ...
-    calculate_tpr(benchmarking_summary_filename,ground_truth_dcoeff_file,stat_level_str, ...
-        stat_gt_level_str,remove_matrix_diag,edge_groups,tpr_dthresh)
+    calculate_tpr(rep_data, gt_data, tpr_dthresh)
+    
 
-    lastwarn('');
-    load(benchmarking_summary_filename,'positives_total','positives_total_neg','n_repetitions', ...
-        'n_subs_subset','run_time_h','n_perms')
-    load(ground_truth_dcoeff_file,'dcoeff','n_subs_total')
-    
-    [warnmsg,~] = lastwarn;
-    if contains(warnmsg,'Variable ') && contains(warnmsg,'not found.')
-        error(['Unable to load all necessary variables from ',benchmarking_summary_filename, ...
-            '.\nPlease check these exist and try again. ' ...
-            '(Recently added grsize to the filename string--check that this is included.)']);
-    end
-    
-    dcoeff_edge=dcoeff.edge;
-    dcoeff=dcoeff.(stat_gt_level_str);
+    %dcoeff_edge=dcoeff.edge;
+    %dcoeff=dcoeff.(stat_gt_level_str);
     
     % make masks
     % count dimensions and make upper triangular masks
-    n_features=length(dcoeff);
-    n_nodes=int16(roots([1 1 -2*n_features])); % assuming n_nets x n_nets, x = n*(n+1)/2 -> n^2 + n - 2x
-    n_nodes=n_nodes(end) + remove_matrix_diag.(stat_gt_level_str);
-    triu_msk=triu(true(n_nodes),remove_matrix_diag.(stat_gt_level_str));
-    ids_triu=find(triu_msk);
+    %n_features=length(dcoeff);
+    %n_nodes=int16(roots([1 1 -2*n_features])); % assuming n_nets x n_nets, x = n*(n+1)/2 -> n^2 + n - 2x
+    %n_nodes=n_nodes(end) + remove_matrix_diag.(stat_gt_level_str);
+    %triu_msk=triu(true(n_nodes),remove_matrix_diag.(stat_gt_level_str));
+    %ids_triu=find(triu_msk);
     
     % convert network-level ground truth results from lower triangle to upper triangle 
     % - this sad mismatch is an unfortunate consequence of my summat scripts using the lower tri but NBS toolbox using 
@@ -221,40 +209,51 @@ function [dcoeff,tpr,fpr,fwer_strong,fdr,localizing_power,num_fp,spatial_extent_
     %
     % note: benchmarking positives_total is triu (?)
     % TODO: consider whether here or in dcoeff script above (maybe here?)
-    if strcmp(stat_gt_level_str,'network') 
-        tmp=tril(true(n_nodes));
-        dcoeff=structure_data(dcoeff,'mask',tmp);
-        dcoeff=dcoeff';
-        dcoeff=dcoeff(triu_msk);
-    end
+    %if strcmp(stat_gt_level_str,'network') 
+    %    tmp=tril(true(n_nodes));
+    %    dcoeff=structure_data(dcoeff,'mask',tmp);
+    %    dcoeff=dcoeff';
+    %    dcoeff=dcoeff(triu_msk);
+    %end
 
     % get indices of positive and negative ground truth dcoefficients
-    ids_pos_vec=dcoeff>tpr_dthresh;
-    ids_neg_vec=dcoeff<(-1*tpr_dthresh);
+    ids_pos_vec=gt_data.brain_data>tpr_dthresh;
+    ids_neg_vec=gt_data.brain_data<(-1*tpr_dthresh);
     ids_zero_vec= ~ids_pos_vec & ~ids_neg_vec;
+
+    stat_gt_level_str = set_statistic_level(rep_data.meta_data.test_type);
+    
     
     switch  stat_gt_level_str
+
         case 'edge'
             ids_pos=ids_triu(ids_pos_vec);
             ids_neg=ids_triu(ids_neg_vec);
             ids_zero=ids_triu(ids_zero_vec);
+
         case 'network'
             ids_pos=ids_pos_vec;
             ids_neg=ids_neg_vec;
             ids_zero=ids_zero_vec;
+
         case 'whole_brain'
             % the Cohen's d-coefficient threshold doesn't directly translate to this multivariate effect size - 
             % treating all nonzero as non-null
-            ids_pos_vec=dcoeff>0;
-            ids_neg_vec=dcoeff<0;
-            ids_zero_vec=0;
-            ids_pos=1;
-            ids_neg=1;
-            ids_zero=nan;
+            ids_pos_vec = gt_data.brain_data > 0;
+            ids_neg_vec = gt_data.brain_data < 0;
+            ids_zero_vec = 0;
+            ids_pos = 1;
+            ids_neg = 1;
+            ids_zero = nan;
+            
     end
-   
+
+    if true
+        %
+    end
+
     % calculate TPR
-    true_positives=zeros(size(dcoeff));
+    true_positives=zeros(size(gt_data.brain_data));
     if contains(stat_level_str,'edge')
         true_positives(ids_pos_vec)=positives_total(ids_pos_vec);
         true_positives(ids_neg_vec)=positives_total_neg(ids_neg_vec);
