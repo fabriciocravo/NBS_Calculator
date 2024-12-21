@@ -56,9 +56,6 @@ do_fpr = 0;
 % set some parameters - similar to setparams function 
 setparams_summary;
 
-% This is not necessary - the methods of the class are all static. Just
-% call the class script directly
-% summary_tools;
 
 
 %% PARSE PARAMETERS
@@ -192,62 +189,44 @@ switch summary_type
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 case 'calculate_tpr'
-    fprintf('**** Aggregating true positives ****\n');
-    if ~use_preaveraged_constrained
-        if length(tasks)<length(all_tasks)
-            error('Not enough tasks specified to combine all.')
-        end
+    
+    gt_data = struct;
+    gt_data.brain_data = getfield(GtData, rep_data.meta_data.gt_location{:});
+    gt_data.meta_data = getfield(GtData, rep_data.meta_data.gt_meta_data_location{:});
+    
+    % I get the edge groups only for the network based ones 
+    if strcmp(rep_data.meta_data.test_type, 'Constrained') || strcmp(rep_data.meta_data.test_type, 'Omnibus') || ...
+        strcmp(rep_data.meta_data.test_type, 'Constrained_FWER')
+        
+        edge_groups = rep_data.meta_data.rep_parameters.edge_groups;
+    else
+        edge_groups = [];
     end
+    
 
-    for t=1:length(tasks)
-        for s=1:length(stat_types)
+    % calculate true positives
+    % returns 
+    %[dcoeff.(stat_types{s})(:,t), tpr.(stat_types{s})(:,t), fpr.(stat_types{s})(:,t), ...
+    % fwer_strong.(stat_types{s})(t),fdr.(stat_types{s})(:,t),localizing_power.(stat_types{s})(t), ...
+    % num_fp.(stat_types{s})(:,t),spatial_extent_fp.(stat_types{s})(:,t), ...
+    % log_data.(stat_types{s}).(tasks{t})] ...
+
+    [a1, a2, a3, a4, a5, a6, a7, a8, a9] = ...
+     summary_tools.calculate_tpr(rep_data, ...
+     gt_data, 0);
     
-            task=tasks{t};
-            stat_type=stat_types{s};
-            this_stat_level_str=stat_level_map.stat_levels_str{strcmp(stat_level_map.stat_types,stat_type)};
-            this_stat_gt_level_str=stat_level_map.stat_gt_levels_str{strcmp(stat_level_map.stat_types,stat_type)};
-            fprintf(['Doing: ',task,'::',stat_type,'\n'])
-    
-            % set files for specified task, stat_type, data_source and make output
-            set_datetimestr_and_files;
-    
-            if use_preaveraged_constrained
-                this_stat_level_str='edge';
-                this_stat_gt_level_str='edge';
-            end
-    
-            % need original bench results for summary in edge_groups - TODO: save edge_groups into summary matfile
-            if strcmp(this_stat_gt_level_str,'network')
-                if exist(results_filename,'file')
-                    load(results_filename,'UI');
-                    edge_groups=UI.edge_groups.ui;
-                else
-                    warning('Loading edge groups from edge groups file, not from original results.');
-                    load(edge_groups_filename,'edge_groups');
-                end
-            else
-                edge_groups=[];
-            end
+    disp("function over")
+    return;
             
-            % calculate true positives
-            [dcoeff.(stat_types{s})(:,t), tpr.(stat_types{s})(:,t), fpr.(stat_types{s})(:,t), ...
-             fwer_strong.(stat_types{s})(t),fdr.(stat_types{s})(:,t),localizing_power.(stat_types{s})(t), ...
-             num_fp.(stat_types{s})(:,t),spatial_extent_fp.(stat_types{s})(:,t),log_data.(stat_types{s}).(tasks{t})] ...
-             = summary_tools.calculate_tpr(benchmarking_summary_filename, ...
-             ground_truth_dcoeff_filename, this_stat_level_str, ...
-             this_stat_gt_level_str, pp.remove_matrix_diag,edge_groups,tpr_dthresh);
-            % TODO: remove the fwer_strong here bc it's already passed to log_data
-        end
-    end
 
-% TODO: remove
-% save(sprintf('/Volumes/GoogleDrive/My Drive/Lab/Misc/Software/scripts/Matlab/myscripts/fwer_fdr_lp_indvid_files/lp_fp_gr%d',grsize),'fdr','num_fp','spatial_extent_fp','-append')
 
 % save combined-task data
-save_settings = summary_tools.check_whether_to_save(save_settings,'save_summarized_data','Combined summary data',combined_summary_filename); % TODO
+save_settings = summary_tools.check_whether_to_save(save_settings,'save_summarized_data','Combined summary data', ...
+    combined_summary_filename); % TODO
 if save_settings.do.save_summarized_data
     if ~exist(combined_summary_dir,'dir'); mkdir(combined_summary_dir); end
-    save(combined_summary_filename,'dcoeff','tpr','log_data','fpr','fwer_strong','fdr','localizing_power','num_fp','spatial_extent_fp','-v7.3');
+    save(combined_summary_filename,'dcoeff','tpr','log_data','fpr','fwer_strong','fdr','localizing_power','num_fp', ...
+        'spatial_extent_fp','-v7.3');
     fprintf(['Saved combined data in ',combined_summary_filename,'.\n']);
 end
     
@@ -284,14 +263,16 @@ for g=1:pp.n_gt_levels
     gt_level_str=stat_level_map.stat_gt_levels_str{s_idx};
     
     pp.n_features.(gt_level_str)=length(dcoeff.(stat_types{s_idx})(:,1));
-    pp.n_nodes.(gt_level_str)=int16(roots([1 1 -2*pp.n_features.(gt_level_str)])); % assuming n_nets x n_nets, x = n*(n+1)/2 -> n^2 + n - 2x
+     % assuming n_nets x n_nets, x = n*(n+1)/2 -> n^2 + n - 2x
+    pp.n_nodes.(gt_level_str)=int16(roots([1 1 -2*pp.n_features.(gt_level_str)])); 
     pp.n_nodes.(gt_level_str)=pp.n_nodes.(gt_level_str)(end) + pp.remove_matrix_diag.(gt_level_str);
     pp.triu_msk.(gt_level_str)=triu(true(pp.n_nodes.(gt_level_str)),pp.remove_matrix_diag.(gt_level_str));
     pp.ids_triu.(gt_level_str)=find(pp.triu_msk.(gt_level_str));
         
 end
 
-summary_tools.visualize_ground_truth(dcoeff,tpr_dthresh,ground_truth_vis_filename_prefix,pp,stat_level_map,save_settings);
+summary_tools.visualize_ground_truth(dcoeff,tpr_dthresh,ground_truth_vis_filename_prefix,pp, ...
+    stat_level_map, save_settings);
 
 
 
@@ -320,7 +301,8 @@ else
     if ~exist(log_dir__task,'dir'); mkdir(log_dir__task); end
 end
 
-load(combined_summary_filename,'dcoeff','tpr','log_data','fpr','fwer_strong','fdr','localizing_power','spatial_extent_fp');
+load(combined_summary_filename,'dcoeff','tpr','log_data','fpr','fwer_strong','fdr', ...
+    'localizing_power','spatial_extent_fp');
 
 for s=1:length(stat_types)
     
@@ -330,19 +312,32 @@ for s=1:length(stat_types)
         
         if pp.do_combined
             % fit spline
-            [tpr_fit.(stat_types{s}),res.(stat_types{s}),dcoeff_windowed.(stat_types{s}),tpr_windowed.(stat_types{s}),tpr_std.(stat_types{s}),~]=...
-                fit_spline(dcoeff.(stat_types{s})(:),tpr.(stat_types{s})(:),pp.spline_smoothing{stat_level_map.stat_gt_levels(s)},pp.window_sz{stat_level_map.stat_gt_levels(s)});
+            [tpr_fit.(stat_types{s}),res.(stat_types{s}),dcoeff_windowed.(stat_types{s}), ...
+                tpr_windowed.(stat_types{s}),tpr_std.(stat_types{s}),~]= ...
+                fit_spline(dcoeff.(stat_types{s})(:),tpr.(stat_types{s})(:), ...
+                pp.spline_smoothing{stat_level_map.stat_gt_levels(s)},pp.window_sz{stat_level_map.stat_gt_levels(s)});
             
             this_log_filename_prefix=[log_filename_prefix__combined,'_all_tasks_',stat_types{s}];
-            save_settings=summary_tools.write_summary_log(dcoeff_windowed.(stat_types{s}),tpr_windowed.(stat_types{s}),fdr.(stat_types{s}),fwer_strong.(stat_types{s}),localizing_power.(stat_types{s}),spatial_extent_fp.(stat_types{s}),log_data.(stat_types{s}),stat_level_map,pp,save_settings,this_log_filename_prefix,1);
+            save_settings=summary_tools.write_summary_log(dcoeff_windowed.(stat_types{s}), ...
+                tpr_windowed.(stat_types{s}), ...
+                fdr.(stat_types{s}),fwer_strong.(stat_types{s}), ...
+                localizing_power.(stat_types{s}), spatial_extent_fp.(stat_types{s}), ...
+                log_data.(stat_types{s}),stat_level_map,pp,save_settings,this_log_filename_prefix,1);
 
         else
             for t=1:length(tasks)
-                [tpr_fit.(stat_types{s})(:,t),res.(stat_types{s})(:,t),dcoeff_windowed.(stat_types{s}).(tasks{t}),tpr_windowed.(stat_types{s}).(tasks{t}),tpr_std.(stat_types{s}).(tasks{t}),~]=...
-                    fit_spline(dcoeff.(stat_types{s})(:,t),tpr.(stat_types{s})(:,t),pp.spline_smoothing{stat_level_map.stat_gt_levels(s)},pp.window_sz{stat_level_map.stat_gt_levels(s)});
+                [tpr_fit.(stat_types{s})(:,t),res.(stat_types{s})(:,t),dcoeff_windowed.(stat_types{s}).(tasks{t}), ...
+                    tpr_windowed.(stat_types{s}).(tasks{t}),tpr_std.(stat_types{s}).(tasks{t}),~]=...
+                    fit_spline(dcoeff.(stat_types{s})(:,t),tpr.(stat_types{s})(:,t), ...
+                    pp.spline_smoothing{stat_level_map.stat_gt_levels(s)}, ...
+                    pp.window_sz{stat_level_map.stat_gt_levels(s)});
             
                 this_log_filename_prefix=[log_filename_prefix__task,'_',tasks{t},'_',stat_types{s}];
-                save_settings=summary_tools.write_summary_log(dcoeff_windowed.(stat_types{s}).(tasks{t}),tpr_windowed.(stat_types{s}).(tasks{t}),fdr.(stat_types{s})(:,t),fwer_strong.(stat_types{s})(t),localizing_power.(stat_types{s})(t),spatial_extent_fp.(stat_types{s})(:,t),log_data.(stat_types{s}).(tasks{t}),stat_level_map,pp,save_settings,this_log_filename_prefix,0);
+                save_settings=summary_tools.write_summary_log(dcoeff_windowed.(stat_types{s}).(tasks{t}), ...
+                    tpr_windowed.(stat_types{s}).(tasks{t}),fdr.(stat_types{s})(:,t), ...
+                    fwer_strong.(stat_types{s})(t),localizing_power.(stat_types{s})(t), ...
+                    spatial_extent_fp.(stat_types{s})(:,t),log_data.(stat_types{s}).(tasks{t}), ...
+                    stat_level_map,pp,save_settings,this_log_filename_prefix,0);
 
             end
         end
@@ -359,7 +354,8 @@ for s=1:length(stat_types)
             gt_level_str=stat_level_map.stat_gt_levels_str{s_idx};
 
             pp.n_features.(gt_level_str)=length(dcoeff.(stat_types{s_idx})(:,1));
-            pp.n_nodes.(gt_level_str)=int16(roots([1 1 -2*pp.n_features.(gt_level_str)])); % assuming n_nets x n_nets, x = n*(n+1)/2 -> n^2 + n - 2x
+            % assuming n_nets x n_nets, x = n*(n+1)/2 -> n^2 + n - 2x
+            pp.n_nodes.(gt_level_str)=int16(roots([1 1 -2*pp.n_features.(gt_level_str)])); 
             pp.n_nodes.(gt_level_str)=pp.n_nodes.(gt_level_str)(end) + pp.remove_matrix_diag.(gt_level_str);
             pp.triu_msk.(gt_level_str)=triu(true(pp.n_nodes.(gt_level_str)),pp.remove_matrix_diag.(gt_level_str));
             pp.ids_triu.(gt_level_str)=find(pp.triu_msk.(gt_level_str));
@@ -367,31 +363,36 @@ for s=1:length(stat_types)
         end
         
         % reshape residuals
-        res.(stat_types{s})=reshape(res.(stat_types{s}),pp.n_features.(stat_level_map.stat_gt_levels_str{s}),pp.n_tasks);
+        res.(stat_types{s})=reshape(res.(stat_types{s}), ...
+            pp.n_features.(stat_level_map.stat_gt_levels_str{s}),pp.n_tasks);
        
     else % whole-brain
         if ~pp.do_combined
             for t=1:length(tasks)
-                % pass specificity measures to log since they are saved independently - % TODO: save directly to log_data in summary_tools
+                % pass specificity measures to log since they are saved independently - 
+                % TODO: save directly to log_data in summary_tools
                 % TODO: may want to save a combined log for whole-brain
                 this_log_filename_prefix=[log_filename_prefix,'_',tasks{t},'_',stat_types{s}];
-                save_settings=summary_tools.write_summary_log(dcoeff.(stat_types{s})(:,t),tpr.(stat_types{s})(:,t),fdr.(stat_types{s})(:,t),fwer_strong.(stat_types{s})(t),localizing_power.(stat_types{s})(t),spatial_extent_fp.(stat_types{s})(:,t),log_data.(stat_types{s}).(all_tasks{t}),stat_level_map,pp,save_settings,this_log_filename_prefix,0);
+                save_settings=summary_tools.write_summary_log(dcoeff.(stat_types{s})(:,t),tpr.(stat_types{s})(:,t), ...
+                    fdr.(stat_types{s})(:,t),fwer_strong.(stat_types{s})(t), ...
+                    localizing_power.(stat_types{s})(t),spatial_extent_fp.(stat_types{s})(:,t), ...
+                    log_data.(stat_types{s}).(all_tasks{t}),stat_level_map,pp, ...
+                    save_settings,this_log_filename_prefix,0);
             end
         end
     end
 end
 
-% TODO: TEMPORARY FOR TESTING ONLY, APPEND TO EXISTING FILES AND REMOVE HERE
-% load(sprintf('/Volumes/GoogleDrive/My Drive/Lab/Misc/Software/scripts/Matlab/myscripts/fwer_fdr_lp_indvid_files/lp_fp_gr%d.mat',grsize))
 
 pp.all_tasks=tasks; % TODO: need for individual tasks, but maybe there's a better way
-% summary_tools.visualize_tpr(dcoeff,tpr,tpr_fit,dcoeff_windowed,tpr_windowed,tpr_std,res,filename_prefix,pp,stat_level_map,save_settings);
-% summary_tools.visualize_tpr(dcoeff,tpr,tpr_fit,dcoeff_windowed,tpr_windowed,tpr_std,res,fpr,fwer_strong,fdr,localizing_power,num_fp,spatial_extent_fp,filename_prefix,pp,stat_level_map,save_settings);
-summary_tools.visualize_tpr(dcoeff,tpr,tpr_fit,dcoeff_windowed,tpr_windowed,tpr_std,res,fpr,fwer_strong,fdr,localizing_power,spatial_extent_fp,filename_prefix,pp,stat_level_map,save_settings);
+summary_tools.visualize_tpr(dcoeff,tpr,tpr_fit,dcoeff_windowed,tpr_windowed,tpr_std,res,fpr, ...
+    fwer_strong,fdr,localizing_power,spatial_extent_fp, ...
+    filename_prefix,pp,stat_level_map,save_settings);
 
 
 otherwise % catch mis-specified summary_type
-    error('Specified summary procedure doesn''t exist. Must be one of: ''dcoeff'', ''positives'', ''calculate_tpr'', ''visualize_gt'', or ''visualize_tpr''.')
+    error(['Specified summary procedure doesn''t exist. Must be one of: ''dcoeff'', ''positives'', ' ...
+        '''calculate_tpr'', ''visualize_gt'', or ''visualize_tpr''.'])
 end
 end
 
