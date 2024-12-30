@@ -46,7 +46,9 @@ for i = 1:length(matFiles)
     rep_parameters = data.RP;
     data = rmfield(data, 'RP');
 
-    WithMeta = add_meta_data_to_repetition_data(data, 'dataset', dataset, 'map', map, ...
+    mask = triu(ones(268), 1);
+
+    meta_data = add_meta_data_to_repetition_data(data, 'dataset', dataset, 'map', map, ...
                                                 'test', 't', 'test_components', components, ...
                                                 'omnibus', omnibus_type, 'subject_number', subject_number, ...
                                                 'testing_code', false, 'test_type', test_type, ...
@@ -55,8 +57,7 @@ for i = 1:length(matFiles)
     [~, f_name, f_ext] = fileparts(file_path);
     output_dir = [save_dir, f_name, f_ext];
 
-    brain_data = WithMeta.brain_data;
-    meta_data = WithMeta.meta_data;
+    brain_data = data;
     save(output_dir, "brain_data", "meta_data");
 
 end

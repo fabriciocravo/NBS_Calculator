@@ -1,17 +1,23 @@
-function [existence, full_file_path] = create_and_check_rep_file(data_set_name, test_name, stat_type, ...
-                                                                omnibus_type, rep_subject_number, testing, ...
-                                                                ground_truth)
-     
-    % Initialize the directory where files are stored
-    %% TODO - REMOVE THIS FROM HERE - PUT IT IN PROPER SCRIPT
-    data_dir = './data_results/'; % Adjust this path if needed
+function [existence, full_file_path] = create_and_check_rep_file(data_dir, data_set_name, test_components, ...
+                                                                 test_type, stat_type, ...
+                                                                 omnibus_type, rep_subject_number, testing, ...
+                                                                 ground_truth)
     
+    %% Preprocess inputs
+    subject_number_str = strcat('subs_', int2str(rep_subject_number));
+   
+    % Process nobus if there is none
+    if isnan(omnibus_type)
+        omnibus_type = 'nobus';
+    end
+
+    %% Make file name
     if testing == 0
-        rep_file_name = sprintf('%s-%s-%s-%s-%d.mat', data_set_name, test_name, stat_type, omnibus_type, ...
-                                rep_subject_number);
+        rep_file_name = sprintf('%s-%s-%s-%s-%s-%s.mat', data_set_name, test_components, test_type, ...
+                                stat_type, omnibus_type, subject_number_str);
     else
-        rep_file_name = sprintf('%s-%s-%s-%s-%d-test.mat', data_set_name, test_name, stat_type, omnibus_type, ...
-                                rep_subject_number);
+        rep_file_name = sprintf('%s-%s-%s-%s-%s-%s-test.mat', data_set_name, test_components, test_type, ...
+                                stat_type, omnibus_type, subject_number_str);
     end
 
     if ground_truth

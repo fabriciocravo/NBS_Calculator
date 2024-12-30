@@ -28,7 +28,6 @@ else
     % disp('Data already loaded')
 end
 % Extract dataset name
-[~, data_set_name, ~] = fileparts(data_dir);
 
 [current_path,~,~]=fileparts(mfilename('fullpath')); % assuming NBS_benchmarking is current folder
 addpath(genpath(current_path));
@@ -38,9 +37,9 @@ addpath(genpath(current_path));
 
 Params = setparams();
 Params = setup_experiment_data(Params, Dataset);
-Params.data_set = data_set_name;
+Params.data_set = get_data_set_name(Dataset);
 
-setup_parallel_workers(Params.parallel, Params.n_workers);
+% setup_parallel_workers(Params.parallel, Params.n_workers);
 
 OutcomeData = Dataset.outcome;
 BrainData = Dataset.brain_data;

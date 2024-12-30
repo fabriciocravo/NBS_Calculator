@@ -12,6 +12,7 @@ function Params = setparams()
 % if true, will update paths using system and paths in setpaths.m
 % if false, will use the paths defined below
 Params.system_dependent_paths=0;
+Params.save_directory = './data_results/';
 
 % If recalculate is equal to 1 - recalculate
 Params.recalculate = 0;
@@ -118,7 +119,7 @@ Params.use_preaveraged_constrained = 0; % 1 | 0
 %%%%% DEVELOPERS ONLY %%%%%
 % Use a small subset of permutations for faster development -- inappropriate for inference
 
-Params.testing = 1;
+Params.testing = true;
 Params.test_n_perms = '20';
 Params.test_n_repetitions = 20;
 Params.test_n_workers = 8;

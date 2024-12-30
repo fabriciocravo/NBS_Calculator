@@ -127,70 +127,57 @@ end
     
 %% -------------------------------------------------------------------------%
 % ******** Calculate positives (not *true* positives) **********
-function ss=calculate_positives(rep_data, ss)
+function PowerRes = calculate_positives(rep_data)
+      PowerRes = struct;
       
-      if ss.do.save_benchmarking_summary
-          % Load and summarize benchmarking results: 'edge_stats_summary','cluster_stats_summary','positives','positives_total','FWER_manual'
-          % Note: pos/neg refer to the positive/negative tails tested, not the ground truth dcoefficient     
+      %% Get Params and Variables
+      % get params
+      n_repetitions = rep_data.meta_data.rep_parameters.n_repetitions;
+      n_subs_subset = rep_data.meta_data.rep_parameters.n_subs_subset;
+      n_perms = rep_data.meta_data.rep_parameters.n_perms;
 
-          %% Get Params and Variables
-          % get params
-          n_repetitions = rep_data.meta_data.rep_parameters.n_repetitions;
-          n_subs_subset = rep_data.meta_data.rep_parameters.n_subs_subset;
-          n_perms = rep_data.meta_data.rep_parameters.n_perms;
+      % get variables
+      pvals_all = rep_data.brain_data.pvals_all;
+      pvals_all_neg = rep_data.brain_data.pvals_all_neg;
+      edge_stats_all = rep_data.brain_data.edge_stats_all;
+      edge_stats_all_neg = rep_data.brain_data.edge_stats_all_neg;
+      cluster_stats_all = rep_data.brain_data.cluster_stats_all;
+      cluster_stats_all_neg = rep_data.brain_data.cluster_stats_all_neg;
 
-          % get variables
-          pvals_all = rep_data.brain_data.pvals_all;
-          pvals_all_neg = rep_data.brain_data.pvals_all_neg;
-          edge_stats_all = rep_data.brain_data.edge_stats_all;
-          edge_stats_all_neg = rep_data.brain_data.edge_stats_all_neg;
-          cluster_stats_all = rep_data.brain_data.cluster_stats_all;
-          cluster_stats_all_neg = rep_data.brain_data.cluster_stats_all_neg;
-    
-          % get alpha - a little diferent
-          if isstring(rep_data.meta_data.rep_parameters.pthresh_second_level)
-              alpha = str2double(rep_data.meta_data.rep_parameters.pthresh_second_level);
-          else
-              alpha = rep_data.meta_data.rep_parameters.pthresh_second_level;
-          end
-
-
-          positives=+(rep_data.brain_data.pvals_all<alpha);
-          positives_neg=+(rep_data.brain_data.pvals_all_neg<alpha);
-          positives_total=sum(positives,length(size(positives)));
-          positives_total_neg=sum(positives_neg,length(size(positives)));
-
-          % summarize edge and cluster stats (saved but not currently used in visualization/log)
-          edge_stats_summary.mean = mean(edge_stats_all,length(size(edge_stats_all)));
-          edge_stats_summary.std = std(edge_stats_all,0,length(size(edge_stats_all)));
-          edge_stats_summary_neg.mean = mean(edge_stats_all_neg,length(size(edge_stats_all_neg)));
-          edge_stats_summary_neg.std = std(edge_stats_all_neg,0,length(size(edge_stats_all_neg)));
-
-          cluster_stats_summary.mean=mean(cluster_stats_all,length(size(cluster_stats_all)));
-          cluster_stats_summary.std=std(cluster_stats_all,0,length(size(cluster_stats_all)));
-          cluster_stats_summary_neg.mean=mean(cluster_stats_all_neg,length(size(cluster_stats_all_neg)));
-          cluster_stats_summary_neg.std=std(cluster_stats_all_neg,0,length(size(cluster_stats_all_neg)));
-
-          
-          % Saving positives is useless for now
-          if true
-             %
-          else
-              save(benchmarking_summary_filename,'edge_stats_summary','edge_stats_summary_neg','cluster_stats_summary', ...
-              'cluster_stats_summary_neg','positives','positives_neg','positives_total','positives_total_neg', ...
-              'n_repetitions','n_subs_subset','run_time_h','n_perms','-v7.3');
-          end
-
-      
+      % get alpha - a little diferent
+      if isstring(rep_data.meta_data.rep_parameters.pthresh_second_level)
+          alpha = str2double(rep_data.meta_data.rep_parameters.pthresh_second_level);
+      else
+          alpha = rep_data.meta_data.rep_parameters.pthresh_second_level;
       end
+
+
+      PowerRes.positives=+(rep_data.brain_data.pvals_all<alpha);
+      PowerRes.positives_neg=+(rep_data.brain_data.pvals_all_neg<alpha);
+      PowerRes.positives_total=sum(PowerRes.positives,length(size(PowerRes.positives)));
+      PowerRes.positives_total_neg=sum(PowerRes.positives_neg,length(size(PowerRes.positives)));
+
+      % summarize edge and cluster stats (saved but not currently used in visualization/log)
+      PowerRes.edge_stats_summary.mean = mean(edge_stats_all,length(size(edge_stats_all)));
+      PowerRes.edge_stats_summary.std = std(edge_stats_all,0,length(size(edge_stats_all)));
+      PowerRes.edge_stats_summary_neg.mean = mean(edge_stats_all_neg,length(size(edge_stats_all_neg)));
+      PowerRes.edge_stats_summary_neg.std = std(edge_stats_all_neg,0,length(size(edge_stats_all_neg)));
+
+      PowerRes.cluster_stats_summary.mean=mean(cluster_stats_all,length(size(cluster_stats_all)));
+      PowerRes.cluster_stats_summary.std=std(cluster_stats_all,0,length(size(cluster_stats_all)));
+      PowerRes.cluster_stats_summary_neg.mean=mean(cluster_stats_all_neg,length(size(cluster_stats_all_neg)));
+      PowerRes.cluster_stats_summary_neg.std=std(cluster_stats_all_neg,0,length(size(cluster_stats_all_neg)));
+
       
 end
 
 %% -------------------------------------------------------------------------%
 % ******** Calculate true positives **********
-function [dcoeff,tpr,fpr,fwer_strong,fdr,localizing_power,num_fp,spatial_extent_fp,log_data] = ...
-    calculate_tpr(rep_data, gt_data, tpr_dthresh)
+function PowerRes = calculate_tpr(rep_data, gt_data, tpr_dthresh, PowerRes)
     
+    
+    %% Get stat level - edge, network, or brain
+    stat_gt_level_str = set_statistic_level(rep_data.meta_data.test_type);
 
     %dcoeff_edge=dcoeff.edge;
     %dcoeff=dcoeff.(stat_gt_level_str);
@@ -201,7 +188,7 @@ function [dcoeff,tpr,fpr,fwer_strong,fdr,localizing_power,num_fp,spatial_extent_
     %n_nodes=int16(roots([1 1 -2*n_features])); % assuming n_nets x n_nets, x = n*(n+1)/2 -> n^2 + n - 2x
     %n_nodes=n_nodes(end) + remove_matrix_diag.(stat_gt_level_str);
     %triu_msk=triu(true(n_nodes),remove_matrix_diag.(stat_gt_level_str));
-    %ids_triu=find(triu_msk);
+    % ids_triu=find(triu_msk);
     
     % convert network-level ground truth results from lower triangle to upper triangle 
     % - this sad mismatch is an unfortunate consequence of my summat scripts using the lower tri but NBS toolbox using 
@@ -215,26 +202,25 @@ function [dcoeff,tpr,fpr,fwer_strong,fdr,localizing_power,num_fp,spatial_extent_
     %    dcoeff=dcoeff';
     %    dcoeff=dcoeff(triu_msk);
     %end
+    
 
     % get indices of positive and negative ground truth dcoefficients
     ids_pos_vec=gt_data.brain_data>tpr_dthresh;
     ids_neg_vec=gt_data.brain_data<(-1*tpr_dthresh);
     ids_zero_vec= ~ids_pos_vec & ~ids_neg_vec;
+    
 
-    stat_gt_level_str = set_statistic_level(rep_data.meta_data.test_type);
-    
-    
     switch  stat_gt_level_str
 
         case 'edge'
-            ids_pos=ids_triu(ids_pos_vec);
-            ids_neg=ids_triu(ids_neg_vec);
-            ids_zero=ids_triu(ids_zero_vec);
+            ids_pos = ids_pos_vec;
+            ids_neg = ids_neg_vec;
+            ids_zero= ids_zero_vec;
 
         case 'network'
-            ids_pos=ids_pos_vec;
-            ids_neg=ids_neg_vec;
-            ids_zero=ids_zero_vec;
+            ids_pos = ids_pos_vec;
+            ids_neg = ids_neg_vec;
+            ids_zero = ids_zero_vec;
 
         case 'whole_brain'
             % the Cohen's d-coefficient threshold doesn't directly translate to this multivariate effect size - 
@@ -248,41 +234,16 @@ function [dcoeff,tpr,fpr,fwer_strong,fdr,localizing_power,num_fp,spatial_extent_
             
     end
 
-    if true
-        %
-    end
-
     % calculate TPR
     true_positives=zeros(size(gt_data.brain_data));
-    if contains(stat_level_str,'edge')
-        true_positives(ids_pos_vec)=positives_total(ids_pos_vec);
-        true_positives(ids_neg_vec)=positives_total_neg(ids_neg_vec);
+    if contains(stat_gt_level_str,'edge')
+        true_positives(ids_pos_vec)=PowerRes.positives_total(ids_pos_vec);
+        true_positives(ids_neg_vec)=PowerRes.positives_total_neg(ids_neg_vec);
     else
-        true_positives(ids_pos_vec)=positives_total(ids_pos);
-        true_positives(ids_neg_vec)=positives_total_neg(ids_neg);
+        true_positives(ids_pos_vec)=PowerRes.positives_total(ids_pos);
+        true_positives(ids_neg_vec)=PowerRes.positives_total_neg(ids_neg);
     end
-    tpr=true_positives*100/n_repetitions;
-    
-    % calculate localizing power, strong FPR, and FPR 
-    do_localizing_power=1; % Obviously temporary
-    if do_localizing_power
-        [fpr,fwer_strong,fdr,localizing_power,num_fp,spatial_extent_fp] = ...
-        summary_tools.calculate_fpr_metrics(stat_level_str, benchmarking_summary_filename, ...
-        n_repetitions,ids_pos_vec,ids_neg_vec,ids_zero_vec,ids_pos,ids_neg, ...
-        ids_zero,edge_groups,dcoeff_edge,triu_msk,ids_triu,tpr_dthresh);
-    else
-        localizing_power=NaN;
-        fwer_strong=NaN;
-    end
-    
-    % pass info for log
-    log_data.n_repetitions=n_repetitions;
-    log_data.n_perms=n_perms;
-    log_data.n_subs_subset=n_subs_subset;
-    log_data.n_subs_total=n_subs_total;
-    log_data.run_time_h=run_time_h;
-    log_data.fwer_strong=fwer_strong; % fwer strong
-    
+    PowerRes.tpr=true_positives*100/rep_data.meta_data.rep_parameters.n_repetitions;
     
 end
 
