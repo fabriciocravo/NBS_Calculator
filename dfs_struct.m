@@ -2,7 +2,6 @@ function RepData = dfs_struct(f_call, RepData)
 
     % This is for testing - when set to true only the first path is
     % explored
-    flag_break = false;
 
     RepData = dfs_recursion(RepData, {}, RepData);
     
@@ -22,23 +21,14 @@ function RepData = dfs_struct(f_call, RepData)
             
             if ~flag_meta && ~flag_brain
 
-                RepData = dfs_recursion(node.(field_name), path_cell, RepData);
-                
-                if flag_break
-                    break
-                end
+                RepData = dfs_recursion(node.(field_name), path_cell, RepData); 
 
             elseif flag_meta
                 path_cell = path_cell(1:end-1);
                 
                 data = getfield(RepData, path_cell{:});
                 f_call(data);
-                
-                if true
-                    flag_break = 1;
-                    break
-                end
-
+              
             end
             path_cell = path_cell(1:end-1);   
 
