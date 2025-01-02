@@ -4,8 +4,8 @@
     % positive 
 
 % Initial setup
-addpath(genpath('/Users/f.cravogomes/Desktop/Cloned Repos/NBS_Calculator'))
 scriptDir = fileparts(mfilename('fullpath'));
+addpath(genpath(scriptDir));
 cd(scriptDir);
 vars = who;       % Get a list of all variable names in the workspace
 vars(strcmp(vars, 'RepData')) = [];  % Remove the variable you want to keep from the list
@@ -14,12 +14,13 @@ clear(vars{:});   % Clear all other variables
 clc;
 
 %% Directory to save and find rep data - TODO add them all
-power_dir_save_location = './data_results/power_calculation/';
+Params = setparams();
+Params.save_directory = [Params.save_directory, '/power_calculation/'];
 
 
 %% Create storage directory - only if it does not exist
-if ~exist(power_dir_save_location, 'dir') % Check if the directory does not exist
-    mkdir(power_dir_save_location);       % Create the directory
+if ~exist(Params.save_directory, 'dir') % Check if the directory does not exist
+    mkdir(Params.save_directory);       % Create the directory
 end
 
 if ~exist('RepData', 'var') || ~exist('GtData', 'var')
@@ -27,6 +28,6 @@ if ~exist('RepData', 'var') || ~exist('GtData', 'var')
 end 
 
 power_calculation_tprs = @(x) summarize_tprs('calculate_tpr', x, GtData, ...
-                                             'save_directory', power_dir_save_location);
+                                             'save_directory', Params.save_directory);
 dfs_struct(power_calculation_tprs, RepData);
 

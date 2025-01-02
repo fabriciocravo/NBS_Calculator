@@ -3,8 +3,8 @@ function RepetitionResults = unite_results_from_directory(varargin)
 
     % Create an input parser
     p = inputParser;
-
-    addParameter(p, 'directory', './data_results/with_metadata/', @ischar); % Default: 'default'
+    
+    addParameter(p, 'directory', './power_calculator_results/with_metadata/', @ischar); % Default: 'default'
 
     % Parse the inputs
     parse(p, varargin{:});
@@ -37,7 +37,6 @@ function RepetitionResults = unite_results_from_directory(varargin)
         end
         
         struct_query = {data_set_name, task_name, test_type, subject_number};
-        disp(struct_query)
 
         if meta_data.testing_code
             struct_query = [{'testing'}, struct_query];

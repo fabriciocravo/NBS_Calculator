@@ -3,7 +3,7 @@ function GtData = load_gt_data(varargin)
     % Create an input parser
     p = inputParser;
 
-    addParameter(p, 'directory', './data_results/gt_data/', @ischar); % Default: 'default'
+    addParameter(p, 'directory', './power_calculator_results/gt_data/', @ischar); % Default: 'default'
 
     %% Get GT data files from directory 
     parse(p, varargin{:});
@@ -17,8 +17,9 @@ function GtData = load_gt_data(varargin)
     for i_f = 1:length(gt_files)
         gt_file_name = gt_files{i_f};
         
+        gt_absolute_file = [gt_dir, gt_file_name];
         % small gt data means a single file - struct is the combination
-        gt_data = load(gt_file_name);
+        gt_data = load(gt_absolute_file);
         gt_data = gt_data.results;
         meta_data = gt_data.study_info;
  
