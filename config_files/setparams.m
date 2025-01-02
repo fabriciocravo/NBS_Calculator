@@ -12,23 +12,19 @@ function Params = setparams()
 % if true, will update paths using system and paths in setpaths.m
 % if false, will use the paths defined below
 Params.system_dependent_paths=0;
-Params.save_directory = './data_results/';
+Params.save_directory = './power_calculator_results/';
+Params.data_location = '/Users/f.cravogomes/Desktop/Cloned Repos/NBS_Calculator/data/s_hcp_fc_noble_tasks.mat';
+Params.gt_data_dir = '/Users/f.cravogomes/Desktop/initial_results_power_calculator/gt_data/';
 
 % If recalculate is equal to 1 - recalculate
 Params.recalculate = 0;
 
-% Diectories
+% Directories
 Params.nbs_dir = './NBS1.2';
 Params.other_scripts_dir='./NBS_benchmarking/support_scripts/'; 
 
-% Data: n_nodes x n_nodes x n_subs
-% for testing, get from NBS toolbox "SchizophreniaExample" dir
-Params.data_file = './NBS1.2/SchizophreniaExample/matrices.mat';
 
 %HPC data for now - need to fix directory %% FIX THIS
-Params.data_dir='/Users/steph/Documents/data/mnt/hcp_1200/matrices/';
-Params.output_dir='/Users/steph/Documents/data/mnt/NBS_benchmarking_results/';
-
 
 Params.task1='WM';         % 'EMOTION' | 'GAMBLING' | 'LANGUAGE' | 'MOTOR' | 'RELATIONAL' | 'SOCIAL' | 'WM' | 'REST'
                     % use any for TPR and 'REST' for FPR
