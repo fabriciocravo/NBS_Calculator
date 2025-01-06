@@ -13,7 +13,7 @@ function Params = setparams()
 % if false, will use the paths defined below
 Params.system_dependent_paths=0;
 Params.save_directory = './power_calculator_results/';
-Params.data_location = '/Users/f.cravogomes/Desktop/Cloned Repos/NBS_Calculator/data/s_hcp_fc_noble_tasks.mat';
+Params.data_dir = '/Users/f.cravogomes/Desktop/Cloned Repos/NBS_Calculator/data/s_hcp_fc_noble_tasks.mat';
 Params.gt_data_dir = '/Users/f.cravogomes/Desktop/initial_results_power_calculator/gt_data/';
 
 % If recalculate is equal to 1 - recalculate

@@ -1,7 +1,6 @@
 %% Questions
-    % in summarize_tools - calculate_tpr - is there an issue when dividing
-    % by the repetitions? shouldn't we only consider repetitions where it's
-    % positive 
+    % There is no transpose? The rows and columns in gt and rep data are
+    % inverted
 
 % Initial setup
 scriptDir = fileparts(mfilename('fullpath'));
