@@ -21,7 +21,7 @@ Params.recalculate = 0;
 
 % Directories
 Params.nbs_dir = './NBS1.2';
-Params.other_scripts_dir='./NBS_benchmarking/support_scripts/'; 
+Params.other_scripts_dir='./NBS_benchmarking/support_scripts/';
 
 
 %HPC data for now - need to fix directory %% FIX THIS
@@ -41,9 +41,9 @@ Params.contrast = [-1,1];
 Params.exchange = [];
 
 %%% Model %%%
-Params.do_TPR=1;
-Params.use_both_tasks=1; % for a paired-sample test
-Params.paired_design=1; % currently required if using a paired design
+%Params.do_TPR=1;
+%Params.use_both_tasks=1; % for a paired-sample test
+%Params.paired_design=1; % currently required if using a paired design
 
 %%% Trimmed Scans %%%
 % Specify whether to use resting runs for task2 which have been trimmed to match each task's scan duration
@@ -115,7 +115,7 @@ Params.use_preaveraged_constrained = 0; % 1 | 0
 %%%%% DEVELOPERS ONLY %%%%%
 % Use a small subset of permutations for faster development -- inappropriate for inference
 
-Params.testing = true;
+Params.testing = false;
 Params.test_n_perms = '20';
 Params.test_n_repetitions = 20;
 Params.test_n_workers = 8;

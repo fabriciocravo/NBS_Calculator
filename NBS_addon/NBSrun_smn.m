@@ -208,8 +208,12 @@ UI=varargin{1};
 %Handles to GUI objects to enable progress updates to be written to GUI
 if nargin==2
     S=varargin{2};
-    try set(S.OUT.ls,'string',[]); catch; end
-else S=0; % added to keep running in command line even if didn't pass S object - smn
+    try 
+        set(S.OUT.ls,'string',[]); 
+    catch 
+    end
+else 
+    S=0; % added to keep running in command line even if didn't pass S object - smn
 end
 
 %Assume UI is valid to begin with
@@ -249,10 +253,13 @@ if ischar(UI.matrices.ui) % char input so load in by filename
 else % data al
     [nbs.GLM.y,UI.matrices.ok,DIMS]=read_matrices(UI.matrices.ui);
 end
+
 %Design matrix
 [nbs.GLM.X, UI.design.ok, DIMS] = read_design(UI.design.ui,DIMS); 
+
 %Contrast
 [nbs.GLM.contrast, UI.contrast.ok] = read_contrast(UI.contrast.ui,DIMS);
+
 %Node coordinates [optional, but mandatory for NBSview]
 if isfield(UI.node_coor,'ui')
     [tmp,UI.node_coor.ok]=read_node_coor(UI.node_coor.ui,DIMS); 
@@ -270,13 +277,15 @@ elseif isfield(nbs,'NBS')
         nbs.NBS=rmfield(nbs.NBS,'node_coor');
     end
 end
+
 %Node labels [optional]
-if isfield(UI.node_label,'ui')
+if isfield(UI.node_label, 'ui')
     [tmp,UI.node_label.ok]=read_node_label(UI.node_label.ui,DIMS); 
 else
     tmp=[];
     UI.node_label.ok=0;
 end
+
 if UI.node_label.ok
    nbs.NBS.node_label=tmp;
 elseif isfield(nbs,'NBS')
@@ -284,8 +293,10 @@ elseif isfield(nbs,'NBS')
         nbs.NBS=rmfield(nbs.NBS,'node_label');
     end
 end
+
 %Exchange blocks for permutation [optional]
-[tmp,UI.exchange.ok]=read_exchange(UI.exchange.ui,DIMS);
+[tmp, UI.exchange.ok] = read_exchange(UI.exchange.ui,DIMS);
+
 if UI.exchange.ok
     nbs.GLM.exchange=tmp; 
 elseif isfield(nbs,'GLM')
@@ -293,6 +304,7 @@ elseif isfield(nbs,'GLM')
         nbs.GLM=rmfield(nbs.GLM,'exchange');
     end
 end
+
 %Test statistic
 try nbs.GLM.test=UI.test.ui; 
     if strcmp(nbs.GLM.test,'One Sample')
@@ -302,58 +314,119 @@ try nbs.GLM.test=UI.test.ui;
     elseif strcmp(nbs.GLM.test,'F-test')
         nbs.GLM.test='ftest';
     end
-catch; UI.test.ok=0; end
+catch
+    UI.test.ok = 0;
+end
+
 %Number of permutations
-try if ischar(UI.perms.ui); nbs.GLM.perms=str2num(UI.perms.ui);
-    else; nbs.GLM.perms=UI.perms.ui;
+try 
+    if ischar(UI.perms.ui)
+        nbs.GLM.perms = str2num(UI.perms.ui);
+    else
+        nbs.GLM.perms = UI.perms.ui;
     end
-catch; UI.perms.ok=0; end
-try if ~isnumeric(nbs.GLM.perms) || ~(nbs.GLM.perms>0)
-    UI.perms.ok=0; end
-catch; UI.perms.ok=0; end
+catch
+    UI.perms.ok = 0;
+end
+
+try 
+    if ~isnumeric(nbs.GLM.perms) || ~(nbs.GLM.perms>0)
+        UI.perms.ok=0;
+    end
+catch
+    UI.perms.ok=0;
+end
+
 %Test statistic threshold
-try if ischar(UI.thresh.ui); nbs.STATS.thresh=str2num(UI.thresh.ui); 
-    else;  nbs.STATS.thresh=UI.thresh.ui;
+try 
+    if ischar(UI.thresh.ui)
+        nbs.STATS.thresh=str2num(UI.thresh.ui); 
+    else
+        nbs.STATS.thresh=UI.thresh.ui;
     end
-catch; UI.thresh.ok=0; end
-try if ~isnumeric(nbs.STATS.thresh) || ~(nbs.STATS.thresh>0)
-    UI.thresh.ok=0; end
-catch; UI.thresh.ok=0; end
+catch 
+    UI.thresh.ok=0;
+end
+
+try 
+    if ~isnumeric(nbs.STATS.thresh) || ~(nbs.STATS.thresh>0)
+        UI.thresh.ok=0; 
+    end
+catch
+    UI.thresh.ok=0; 
+end
+
 %Corrected p-value threshold
-try if ischar(UI.alpha.ui); nbs.STATS.alpha=str2num(UI.alpha.ui); 
-    else nbs.STATS.alpha=UI.alpha.ui; 
+try 
+    if ischar(UI.alpha.ui)
+        nbs.STATS.alpha = str2num(UI.alpha.ui); 
+    else 
+        nbs.STATS.alpha = UI.alpha.ui; 
     end
-catch; UI.alpha.ok=0; end
-try if ~isnumeric(nbs.STATS.alpha) || ~(nbs.STATS.alpha>0)
-    UI.alpha.ok=0; end
-catch; UI.alpha.ok=0; end
+catch
+    UI.alpha.ok=0;
+end
+
+try 
+    if ~isnumeric(nbs.STATS.alpha) || ~(nbs.STATS.alpha>0)
+        UI.alpha.ok=0;
+    end
+catch
+    UI.alpha.ok=0;
+end
+
 %Statistic type [required to specify for now, but all should be optional w 'Size' as default]
 % if isfield(UI.statistic_type,'ui') ... ; elseif isfield(nbs,'NBS') ...; end
-try nbs.STATS.statistic_type=UI.statistic_type.ui; catch; UI.statistic_type.ok=0; end 
+try 
+    nbs.STATS.statistic_type=UI.statistic_type.ui; 
+catch
+    UI.statistic_type.ok=0; 
+end 
+
 %Component size [required if statistic_type is Size or TFCE]
-if strcmp(nbs.STATS.statistic_type,'Size') | strcmp(nbs.STATS.statistic_type,'TFCE') 
-    try nbs.STATS.size=UI.size.ui; catch; UI.size.ok=0; end
+if strcmp(nbs.STATS.statistic_type, 'Size') | strcmp(nbs.STATS.statistic_type, 'TFCE') 
+    try 
+        nbs.STATS.size = UI.size.ui;
+    catch 
+        UI.size.ok = 0;
+    end
 end
+
 %Omnibus type [required if statistic_type is Omnibus]
 if strcmp(nbs.STATS.statistic_type,'Omnibus')
-    try nbs.STATS.omnibus_type=UI.omnibus_type.ui; catch; UI.omnibus_type.ok=0; end 
+    try 
+        nbs.STATS.omnibus_type = UI.omnibus_type.ui; 
+    catch
+        UI.omnibus_type.ok=0; 
+    end 
 end
+
 %Using preaveraged input data flag
-if contains(nbs.STATS.statistic_type,'Constrained') || strcmp(nbs.STATS.statistic_type,'SEA') || (strcmp(nbs.STATS.statistic_type,'Omnibus') && strcmp(nbs.STATS.omnibus_type,'Multidimensional_cNBS'))
-    try nbs.STATS.use_preaveraged_constrained=UI.use_preaveraged_constrained.ui; catch; UI.use_preaveraged_constrained.ok=0; end 
+if contains(nbs.STATS.statistic_type,'Constrained') || strcmp(nbs.STATS.statistic_type,'SEA') ...
+    || (strcmp(nbs.STATS.statistic_type,'Omnibus') && strcmp(nbs.STATS.omnibus_type,'Multidimensional_cNBS'))
+    try 
+        nbs.STATS.use_preaveraged_constrained=UI.use_preaveraged_constrained.ui; 
+    catch 
+        UI.use_preaveraged_constrained.ok=0; 
+    end 
 end
+
 %Edge groups [required if using Constrained or Multidimensional_cNBS
 % if preaveraging, n_groups will be taken from data and no grouping file is required]
-if contains(nbs.STATS.statistic_type,'Constrained') || strcmp(nbs.STATS.statistic_type,'SEA') || (strcmp(nbs.STATS.statistic_type,'Omnibus') && strcmp(nbs.STATS.omnibus_type,'Multidimensional_cNBS'))
+if contains(nbs.STATS.statistic_type,'Constrained') || strcmp(nbs.STATS.statistic_type,'SEA') ...
+    || (strcmp(nbs.STATS.statistic_type,'Omnibus') && strcmp(nbs.STATS.omnibus_type,'Multidimensional_cNBS'))
     nbs.STATS.use_edge_groups=1; % used in NBSstats_smn to preallocate null based on number of edge groups
     if nbs.STATS.use_preaveraged_constrained
         % if using preaveraged, don't bother with edge groups and just use the dimensions of the input data
-        nbs.STATS.edge_groups.unique=1:size(nbs.GLM.y,2)'; % input data must be n_groups x n_subs (note that read_matrices will flip this)
+        % input data must be n_groups x n_subs (note that read_matrices will flip this)
+        nbs.STATS.edge_groups.unique=1:size(nbs.GLM.y,2)';
         nbs.STATS.edge_groups.groups=0;
     else
         % if not using preaveraged, load groups as usual
-        try [nbs.STATS.edge_groups,UI.edge_groups.ok]=read_edge_groups(UI.edge_groups.ui,DIMS);
-        catch UI.edge_groups.ok=0;
+        try 
+            [nbs.STATS.edge_groups,UI.edge_groups.ok]=read_edge_groups(UI.edge_groups.ui,DIMS);
+        catch 
+            UI.edge_groups.ok=0;
         end
     end
 else
@@ -364,6 +437,7 @@ else
         end
     end
 end
+
 %{
 % Correction for second level for network-level inference
 if strcmp(nbs.STATS.statistic_type,'Constrained')
@@ -382,7 +456,10 @@ nbs.STATS.N=DIMS.nodes;
 [msg,stop]=errorcheck(UI,DIMS,S);
 %Attempt to print result of error checking to listbox. If this fails, print
 % to screen
-try tmp=get(S.OUT.ls,'string'); set(S.OUT.ls,'string',[msg;tmp]); drawnow;
+try 
+    tmp=get(S.OUT.ls,'string'); 
+    set(S.OUT.ls,'string',[msg;tmp]); 
+    drawnow;
 catch
     for i=1:length(msg)
         fprintf('%s\n',msg{i}); 
@@ -398,6 +475,7 @@ end
 %Only compute the test statistic if it has not been previously computed or
 %the relevant inputs have changed 
 repeat=1;
+
 if isfield(nbs,'UI') 
     %There has been a previous run
     %Note that after a successful run, UI is copied to nbs.UI
@@ -406,6 +484,7 @@ if isfield(nbs,'UI')
         repeat=0;
     end
 end
+
 if repeat
     %Check whether the number of elements in the test_stat matrix exceeds
     %Limit
@@ -413,14 +492,25 @@ if repeat
         %Precompute if the number of elements in test_stat is less than
         %Limit
         str='Pre-randomizing data...';
-        try tmp=get(S.OUT.ls,'string'); set(S.OUT.ls,'string',[{str};tmp]); drawnow;
-        catch;  fprintf([str,'\n']); end 
+        try 
+            tmp=get(S.OUT.ls,'string');
+            set(S.OUT.ls,'string',[{str};tmp]);
+            drawnow;
+        catch 
+            fprintf([str,'\n']); 
+        end 
+
         %Present a waitbar on the GUI showing progress of the randomization process
         %Parent of the waitbar is the figure          
         if isa(S,'struct') % only update if S is struct
-            try S.OUT.waitbar=uiwaitbar(WaitbarPos,S.fh); drawnow;  
-            catch; S.OUT.waitbar=[]; end
+            try 
+                S.OUT.waitbar=uiwaitbar(WaitbarPos,S.fh); 
+                drawnow;  
+            catch
+                S.OUT.waitbar=[]; 
+            end
         end
+
         nbs.STATS.test_stat=zeros(nbs.GLM.perms+1,DIMS.nodes*(DIMS.nodes-1)/2); 
         if isa(S,'struct') % only update if S is struct
             
@@ -434,7 +524,7 @@ if repeat
 %                 catch;  fprintf([str,'\n']);
 %                 end
 %             catch
-                    test_stat=NBSglm(nbs.GLM,S.OUT.waitbar);
+            test_stat=NBSglm(nbs.GLM,S.OUT.waitbar);
 %                     save('tmp.mat','test_stat');
 %             end
             nbs.STATS.test_stat=test_stat;
@@ -458,47 +548,66 @@ if repeat
     else
         %Too big to precompute 
         str='Too many randomizations to precompute...';
-        try tmp=get(S.OUT.ls,'string'); set(S.OUT.ls,'string',[{str};tmp]); drawnow;
-        catch;  fprintf([str,'\n']); end 
+        try 
+            tmp=get(S.OUT.ls,'string'); 
+            set(S.OUT.ls,'string',[{str};tmp]); 
+            drawnow;
+        catch  
+            fprintf([str,'\n']); 
+        end 
         nbs.STATS.test_stat=[]; 
     end
 end
 
 %Do NBS
 if strcmp(UI.method.ui,'Run NBS')
-    str=sprintf('Computing network components (%s)...',nbs.STATS.statistic_type);
-    try tmp=get(S.OUT.ls,'string'); set(S.OUT.ls,'string',[{str};tmp]); drawnow;
-    catch;  fprintf([str,'\n']); end 
-    try [nbs.NBS.n,nbs.NBS.con_mat,nbs.NBS.pval,nbs.NBS.edge_stats,nbs.NBS.cluster_stats]=NBSstats_smn(nbs.STATS,S.OUT.ls,nbs.GLM); % SMN
-    catch; [nbs.NBS.n,nbs.NBS.con_mat,nbs.NBS.pval,nbs.NBS.edge_stats,nbs.NBS.cluster_stats]=NBSstats_smn(nbs.STATS,-1,nbs.GLM); end % SMN
+
+    str = sprintf('Computing network components (%s)...',nbs.STATS.statistic_type);
+    try 
+        tmp=get(S.OUT.ls,'string'); 
+        set(S.OUT.ls,'string',[{str};tmp]);
+        drawnow;
+    catch
+        fprintf([str,'\n']); 
+    end 
+    try 
+        [nbs.NBS.n,nbs.NBS.con_mat,nbs.NBS.pval,nbs.NBS.edge_stats,nbs.NBS.cluster_stats] = NBSstats_smn(nbs.STATS,S.OUT.ls,nbs.GLM); % SMN
+    catch 
+        [nbs.NBS.n,nbs.NBS.con_mat,nbs.NBS.pval,nbs.NBS.edge_stats,nbs.NBS.cluster_stats] = NBSstats_smn(nbs.STATS,-1,nbs.GLM); 
+    end % SMN
+
 %Do FDR
 elseif strcmp(UI.method.ui,'Run FDR')
+
     str='Computing edge-level False Discovery Rate...';
-    try tmp=get(S.OUT.ls,'string'); set(S.OUT.ls,'string',[{str};tmp]); drawnow;
-    catch;  fprintf([str,'\n']); end 
+    try 
+        tmp=get(S.OUT.ls,'string'); 
+        set(S.OUT.ls,'string',[{str};tmp]); 
+        drawnow;
+    catch 
+        fprintf([str,'\n'])
+    end 
+
     %Show waitbar if test statistics have not been precomputed
     if isempty(nbs.STATS.test_stat)
-        % SMN - no waitbar for cl version
-        %try S.OUT.waitbar=uiwaitbar(WaitbarPos,S.fh); drawnow; 
-        %catch; S.OUT.waitbar=[]; end
-        %[nbs.NBS.n,nbs.NBS.con_mat,nbs.NBS.pval]=NBSfdr(nbs.STATS,S.OUT.waitbar,nbs.GLM);
         [nbs.NBS.n,nbs.NBS.con_mat,nbs.NBS.pval]=NBSfdr(nbs.STATS,1,nbs.GLM);
-        %delete(S.OUT.waitbar); 
     else
         [nbs.NBS.n,nbs.NBS.con_mat,nbs.NBS.pval]=NBSfdr(nbs.STATS);
     end
+
 elseif strcmp(UI.method.ui,'Run Parametric Edge-Level Correction')
+    
     str='Computing parametric edge-level multiple comparison correction...';
-    try tmp=get(S.OUT.ls,'string'); set(S.OUT.ls,'string',[{str};tmp]); drawnow;
-    catch;  fprintf([str,'\n']); end 
+    try 
+        tmp=get(S.OUT.ls,'string'); 
+        set(S.OUT.ls,'string',[{str};tmp]); 
+        drawnow;
+    catch 
+        fprintf([str,'\n']); 
+    end 
     %Show waitbar if test statistics have not been precomputed
-    if isempty(nbs.STATS.test_stat)
-        % SMN - no waitbar for cl version
-        [nbs.NBS.n,nbs.NBS.con_mat,nbs.NBS.pval,nbs.NBS.edge_stats]=NBSedge_level_parametric_corr(nbs.STATS,1,nbs.GLM);
-    else
-        %% Why was there no GLM HERE? - Ask Steph
-        [nbs.NBS.n,nbs.NBS.con_mat,nbs.NBS.pval,nbs.NBS.edge_stats]=NBSedge_level_parametric_corr(nbs.STATS,1,nbs.GLM);
-    end
+    [nbs.NBS.n,nbs.NBS.con_mat,nbs.NBS.pval,nbs.NBS.edge_stats] = NBSedge_level_parametric_corr(nbs.STATS,1,nbs.GLM);
+   
 end
     
 %Update the UI in the nbs structure to the UI that has just been used for
@@ -507,7 +616,7 @@ nbs.UI=UI;
 
 %Copy test statistics to NBS strucutre so that they can be displayed with
 %each link
-test_stat=zeros(2,DIMS.nodes*(DIMS.nodes-1)/2);
+test_stat = zeros(2,DIMS.nodes*(DIMS.nodes-1)/2);
 if isempty(nbs.STATS.test_stat)
     K=nbs.GLM.perms;
     %Temporarily set to 1 to save computation

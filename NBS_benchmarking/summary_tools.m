@@ -80,7 +80,8 @@ function ss=calculate_dcoefficients(tstat_filename,stat_level_map,dcoeff_filenam
           error(['Unable to load all necessary variables from ',tstat_filename,'.\nPlease check these exist and try again.']);
       end
     catch
-      error('Looks like ground truth data needed for calculating TPR does not exist for %s. Try running calculate_ground_truth.m\n',tstat_filename);
+      error(['Looks like ground truth data needed for calculating TPR does not exist for %s. ' ...
+          'Try running calculate_ground_truth.m\n'],tstat_filename);
     end
 
     % create new variables to match stat_gt_levels 

@@ -110,23 +110,8 @@ function run_benchmarking(RP, Y)
                 end
                 
                 %% Sample rep ids
-                ids_sampled = draw_repetition_ids(RP);
-                               
-               
-                % if FPR, set up random task order
-                % Note that we don't want to use balanced perms (cf. Southworth et al., Properties of Balanced Permutations)
-                if ~RP.do_TPR
-                    
-                    if (RP.use_both_tasks && RP.paired_design) || ~RP.use_both_tasks
-                        switch_task_order = randi([0,1],n_subs_subset, RP.n_repetitions);
-                    else
-                        error('This script hasn''t been fully updated/tested for two-sample yet.');
-                    end
-                else
-                    % Don't 
-                    switch_task_order = [];
-                end          
-              
+                ids_sampled = draw_repetition_ids(RP);               
+             
                 
                 if RP.testing
                     fprintf('\n*** TESTING MODE ***\n\n')
@@ -138,12 +123,13 @@ function run_benchmarking(RP, Y)
                 
                 % Be careful with this parfor commented lol
                 parfor (i_rep=1: RP.n_repetitions)
-                %for i_rep = 1:RP.n_repetitions
+                
+% disp('Parof');  for i_rep = 1:RP.n_repetitions
                     
                     % Encapsulation of the most computationally intensive loop
                     [FWER_rep, edge_stats_all_rep, pvals_all_rep, cluster_stats_all_rep, ...
                      FWER_neg_rep, edge_stats_all_neg_rep, pvals_all_neg_rep, cluster_stats_all_neg_rep] = ...
-                     pf_repetition_loop(i_rep, ids_sampled, switch_task_order, RP, UI, RP.X_rep, Y);
+                     pf_repetition_loop(i_rep, ids_sampled, RP, UI, RP.X_rep, Y);
         
                     FWER = FWER + FWER_rep;
                     FWER_neg = FWER_neg + FWER_neg_rep;
@@ -222,6 +208,7 @@ function run_benchmarking(RP, Y)
                 fprintf('###### Saving results in %s ######### \n', output_dir)
                 save(output_dir, 'brain_data', 'meta_data');
                 
+                return;
         
             end
         end

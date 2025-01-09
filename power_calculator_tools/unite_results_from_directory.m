@@ -4,8 +4,8 @@ function RepetitionResults = unite_results_from_directory(varargin)
     % Create an input parser
     p = inputParser;
     
-    addParameter(p, 'directory', './power_calculator_results/with_metadata/', @ischar); % Default: 'default'
-
+    addParameter(p, 'directory', './power_calculator_results/', @ischar); % Default: 'default'
+    
     % Parse the inputs
     parse(p, varargin{:});
     data_dir = p.Results.directory;
@@ -22,7 +22,6 @@ function RepetitionResults = unite_results_from_directory(varargin)
         
         %% Load Data
         rep_data = load(file_path);
-        brain_data = rep_data.brain_data;
         meta_data = rep_data.meta_data;
         
         %% Query elements 

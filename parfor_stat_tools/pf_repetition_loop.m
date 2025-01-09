@@ -1,6 +1,6 @@
 function [FWER_rep, edge_stats_rep, pvals_rep, cluster_stats_rep, ...
           FWER_rep_neg, edge_stats_rep_neg, pvals_rep_neg, cluster_stats_rep_neg] = ...
-          pf_repetition_loop(i_rep, ids_sampled, switch_task_order, RP, UI, X_rep, Y)
+          pf_repetition_loop(i_rep, ids_sampled, RP, UI, X_rep, Y)
 
     %
     % Description:
@@ -26,23 +26,10 @@ function [FWER_rep, edge_stats_rep, pvals_rep, cluster_stats_rep, ...
     rep_sub_ids = ids_sampled(:, i_rep);
     
     % Extract data points for this repetion 
-    Y_rep = Y(:, rep_sub_ids);
-     
-    if RP.use_both_tasks 
-         
-        Y_rep = pf_paired_atlas_order(Y_rep, ...
-                                      RP.mapping_category, ...
-                                      RP.mask, RP.do_TPR, switch_task_order, ...
-                                      RP.n_subs_subset); 
-            
-    else
-
-        Y_rep = pf_sinle_atlas_order(Y_rep, i_rep, ...
-                                     RP.mapping_category, RP.mask, ...
-                                     switch_task_order);
-        
-    end
-
+    Y_rep = Y(:, rep_sub_ids);  
+    
+    % Y_rep = apply_atlas_order(Y_rep, RP.mapping_category, RP.mask, RP.n_subs_subset); 
+              
     % Assign setup_benchmark parameters to new UI
     UI_new = UI;
     
@@ -106,7 +93,6 @@ function [FWER_rep, edge_stats_rep, pvals_rep, cluster_stats_rep, ...
         % if strcmp(UI.statistic_type.ui,'Omnibus') % single result for omnibus
         %  cluster_stats_all(this_repetition)=full(nbs.NBS.cluster_stats);
         % cluster_stats_all_neg(this_repetition)=full(nbs_neg.NBS.cluster_stats);
-        
         %  else
 
         cluster_stats_rep = full(nbs.NBS.cluster_stats);

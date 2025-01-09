@@ -1,13 +1,3 @@
-%%%%%
-    %% Questions
-        % - subtraction and t-test is way more computationally efficient than
-        % paired -t
-        % - started calculations
-        % - in create_test_contrast
-            % nbs_exchange for t test? what is it? 
-        % - Naming task files - potential issue ?
-%%%%%
-
 
 % Set working directory to the directory of this script
 scriptDir = fileparts(mfilename('fullpath'));
@@ -48,6 +38,9 @@ for ti = 1:length(tests)
     % RP - stands for Repetition Parameters
     RP = Params;
     
+    %% FOR DEBUGING 
+    RP.all_cluster_stat_types = {'Constrained_FWER', 'Constrained'};
+    disp('Debugging still here')
 
     RP = infer_test_from_data(RP, OutcomeData.(t), BrainData);
     
@@ -62,9 +55,11 @@ for ti = 1:length(tests)
 
     run_benchmarking(RP, Y)
 
-    if RP.testing == 1 && ti == 2
-        return;
-    end
+    return;
+
+    %if RP.testing == 1 && ti == 2
+    %    return;
+    %end
     
 end
 

@@ -46,7 +46,6 @@ function PowerRes = summarize_tprs(summary_type, rep_data, GtData, varargin)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-
 %% PARSE PARAMETERS
 
 % parse user input

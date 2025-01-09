@@ -1,6 +1,13 @@
 %% Questions
-    % There is no transpose? The rows and columns in gt and rep data are
-    % inverted
+    % There appears to be something wrong in the network level power
+    % calculations - edge level and whole brain are fine
+    % I likely made an error in the atlas 
+    % Cluster has network-based stats not edge
+    % Found it - Likely problem in edge groups!
+    % 
+    %% Potential fix - More resonable results!
+    %   Used tril mask on extract_atlas_related_parameters for edge groups
+    %   Removed atlas reordering in setupbenchmarking 
 
 % Initial setup
 scriptDir = fileparts(mfilename('fullpath'));

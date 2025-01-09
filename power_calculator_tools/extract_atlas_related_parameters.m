@@ -7,7 +7,6 @@ function [n_node_nets, trilmask_net, edge_groups] = extract_atlas_related_parame
     trilmask_net = NaN;
 
     % Only apply atlas to the network-based stats
-    %% ADDED OMNIBUS HERE TO ATLAS - IS THIS CORRECT?????
     if strcmp(RP.cluster_stat_type, 'Constrained') || strcmp(RP.cluster_stat_type, 'Omnibus') || ...
         strcmp(RP.cluster_stat_type, 'Constrained_FWER')
        
@@ -18,6 +17,7 @@ function [n_node_nets, trilmask_net, edge_groups] = extract_atlas_related_parame
   
         edge_groups = load_atlas_edge_groups(RP.n_nodes, RP.mapping_category);
         edge_groups = tril(edge_groups,-1);
+        % edge_groups = triu(edge_groups, 1);
         
     else
         % plus 1 because the script expects there to be a "0" (and will subsequently ignore..."
