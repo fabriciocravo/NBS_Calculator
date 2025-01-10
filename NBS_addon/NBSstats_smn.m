@@ -83,7 +83,7 @@ else
 end
 
 % Set statistic type to numeric - size (extent/intensity) (0), constrained (1), or TFCE (2)
-Intensity=0;
+Intensity = 0;
 switch STATS.statistic_type
 
     case 'Size'

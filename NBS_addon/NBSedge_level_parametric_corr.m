@@ -40,11 +40,11 @@ function [any_significant,con_mat,pval,edge_stats__target]=NBSedge_level_paramet
 STATS=varargin{1}; 
 if nargin==2
     %Handle to listbox
-    H=varargin{2}; 
+    H = varargin{2}; 
 elseif nargin==3
     %Handle to GLM
-    H=varargin{2};
-    GLM=varargin{3}; 
+    H = varargin{2};
+    GLM = varargin{3}; 
 end
 
 %Is BGL available?
@@ -94,7 +94,7 @@ switch STATS.statistic_type
         pval = p_uncorr*length(edge_stats__target);
     case 'Parametric_FDR'
         % https://www.ncbi.nlm.nih.gov/pmc/articles/PMC170937/
-        % q value is a function of FDR that guarantees that q increases with p
+        % q value is a function of FDR that guarantees that q increases with p 
         [~, pval] = mafdr(p_uncorr);
     otherwise
         error('Invalid or no correction specified. Aborting.');

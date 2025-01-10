@@ -1,3 +1,20 @@
+%% Questions
+    % There appears to be something wrong in the network level power
+    % calculations - edge level and whole brain are fine
+    % I likely made an error in the atlas 
+    % Cluster has network-based stats not edge
+    % Found it - Likely problem in edge groups!
+    % 
+    %% Potential fix - More resonable results!
+    %   Used tril mask on extract_atlas_related_parameters for edge groups
+    %   Removed atlas reordering in setupbenchmarking 
+    %
+    %% Potential issues
+    % - nbs_method different than statistic_type - ?
+    % - 'FDR' method and cluster type - what is it ?
+    %
+    %% TODO
+    % - shen atlas check 
 
 % Set working directory to the directory of this script
 scriptDir = fileparts(mfilename('fullpath'));
@@ -39,8 +56,8 @@ for ti = 1:length(tests)
     RP = Params;
     
     %% FOR DEBUGING 
-    RP.all_cluster_stat_types = {'Constrained_FWER', 'Constrained'};
-    disp('Debugging still here')
+    % RP.all_cluster_stat_types = {'Constrained_FWER', 'Constrained'};
+    % disp('Debugging still here')
 
     RP = infer_test_from_data(RP, OutcomeData.(t), BrainData);
     
