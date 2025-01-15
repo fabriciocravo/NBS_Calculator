@@ -24,7 +24,7 @@ end
 switch RepParams.cluster_stat_type
 
     case 'FDR'
-       RepParams.nbs_method = 'Run FDR';
+        RepParams.nbs_method = 'Run FDR';
     case 'Parametric_Bonferroni'
         RepParams.nbs_method = 'Run Parametric Edge-Level Correction';
     case 'Parametric_FDR'
@@ -79,6 +79,11 @@ UI.use_preaveraged_constrained.ui = RepParams.edge_groups;
 UI.exchange.ui = RepParams.nbs_exchange;
 UI.mask.ui = RepParams.mask;
 % UI.do_Constrained_FWER_second_level.ui=do_Constrained_FWER_second_level;
+
+%% Set up DIMS
+UI.DIMS.nodes = RepParams.n_nodes;
+UI.DIMS.observations = RepParams.n_subs_subset;
+UI.DIMS.predictors = size(RepParams.X_rep, 2);
 
 end
 

@@ -29,7 +29,7 @@ function RepetitionResults = unite_results_from_directory(varargin)
         task_name = strcat(meta_data.test_components{1}, '_', meta_data.test_components{2});
         subject_number = sprintf('subs_%d', meta_data.subject_number);
 
-        if isnan(meta_data.omnibus)
+        if any(isnan(meta_data.omnibus)) || strcmp(meta_data.omnibus, 'nobus')
             test_type = meta_data.test_type;
         else
             test_type = strcat(meta_data.test_type, '_', meta_data.omnibus);

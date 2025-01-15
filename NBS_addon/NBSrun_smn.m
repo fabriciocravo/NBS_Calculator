@@ -241,61 +241,16 @@ nbs.STATS.mask = UI.mask.ui;
 
 %Read UI and assign to appropriate structure
 %Connectivity matrices
-if ischar(UI.matrices.ui) % char input so load in by filename
-    if exist(fileparts(UI.matrices.ui),'dir')
-        [nbs.GLM.y,UI.matrices.ok,DIMS]=read_matrices([fileparts(UI.matrices.ui),filesep]);
-        if ~UI.matrices.ok
-            [nbs.GLM.y,UI.matrices.ok,DIMS]=read_matrices(UI.matrices.ui);
-        end
-    else
-        [nbs.GLM.y,UI.matrices.ok,DIMS]=read_matrices(UI.matrices.ui);
-    end
-else % data al
-    [nbs.GLM.y,UI.matrices.ok,DIMS]=read_matrices(UI.matrices.ui);
-end
 
-%Design matrix
-[nbs.GLM.X, UI.design.ok, DIMS] = read_design(UI.design.ui,DIMS); 
+% Matrices and dimensions and contrast
+nbs.GLM.y = UI.matrices.ui;
+nbs.GLM.X = UI.design.ui;
+DIMS = UI.DIMS;
+nbs.GLM.contrast = UI.contrast.ui;
 
-%Contrast
-[nbs.GLM.contrast, UI.contrast.ok] = read_contrast(UI.contrast.ui,DIMS);
-
-%Node coordinates [optional, but mandatory for NBSview]
-if isfield(UI.node_coor,'ui')
-    [tmp,UI.node_coor.ok]=read_node_coor(UI.node_coor.ui,DIMS); 
-else
-    tmp=[];
-    UI.node_coor.ok=0;
-end
-if UI.node_coor.ok
-   nbs.NBS.node_coor=tmp; 
-elseif isfield(nbs,'NBS')
-    if isfield(nbs.NBS,'node_coor')
-        %Delete field if was not able to read
-        %Covers the situation when was able to read in previous run, but not in
-        %the current run
-        nbs.NBS=rmfield(nbs.NBS,'node_coor');
-    end
-end
-
-%Node labels [optional]
-if isfield(UI.node_label, 'ui')
-    [tmp,UI.node_label.ok]=read_node_label(UI.node_label.ui,DIMS); 
-else
-    tmp=[];
-    UI.node_label.ok=0;
-end
-
-if UI.node_label.ok
-   nbs.NBS.node_label=tmp;
-elseif isfield(nbs,'NBS')
-    if isfield(nbs.NBS,'node_label')
-        nbs.NBS=rmfield(nbs.NBS,'node_label');
-    end
-end
 
 %Exchange blocks for permutation [optional]
-[tmp, UI.exchange.ok] = read_exchange(UI.exchange.ui,DIMS);
+[tmp, UI.exchange.ok] = read_exchange(UI.exchange.ui, DIMS);
 
 if UI.exchange.ok
     nbs.GLM.exchange=tmp; 
@@ -348,6 +303,7 @@ catch
     UI.thresh.ok=0;
 end
 
+
 try 
     if ~isnumeric(nbs.STATS.thresh) || ~(nbs.STATS.thresh>0)
         UI.thresh.ok=0; 
@@ -366,6 +322,11 @@ try
 catch
     UI.alpha.ok=0;
 end
+
+
+disp(nbs.STATS.alpha)
+disp(UI.alpha.ok)
+error('Still debugging');
 
 try 
     if ~isnumeric(nbs.STATS.alpha) || ~(nbs.STATS.alpha>0)
@@ -645,105 +606,6 @@ if ~isempty(str)
     try tmp=get(S.OUT.ls,'string'); set(S.OUT.ls,'string',[{str};tmp]); drawnow;
     catch;  fprintf([str,'\n']); end
 end
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%Read connectivity matrices and vectorize the upper triangle
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [y,ok,DIMS]=read_matrices(Name)
-    ok=1;
-    if ischar(Name) % char input so load in by filename
-        data=readUI(Name);
-    else
-        data=Name;
-    end
-    if ~isempty(data)
-        [nr,nc,ns]=size(data);
-        if ns>0 && ~iscell(data) && isnumeric(data)
-            if nr~=nc && ns==1
-                % accept stuff that's been triangularized - smn
-                y=data';
-                nr_old=nr;
-                nr=ceil(sqrt(2*nr_old));
-                if nr_old==nr*(nr-1)/2
-                    ns=nc;
-                    nc=nr;
-                else
-                    ok=0; y=[];
-                    return
-                end
-            elseif nr==nc
-                ind_upper=find(triu(ones(nr,nr),1));
-                y=zeros(ns,length(ind_upper));
-                %Collapse matrices
-                for i=1:ns
-                    tmp=data(:,:,i);
-                    y(i,:)=tmp(ind_upper);
-                end
-            else
-                ok=0; y=[];
-                return
-            end
-        elseif iscell(data)
-            [nr,nc]=size(data{1});
-            ns=length(data);
-            if nr==nc && ns>0
-                ind_upper=find(triu(ones(nr,nr),1));
-                y=zeros(ns,length(ind_upper));
-                %Collapse matrices
-                for i=1:ns
-                    [nrr,ncc]=size(data{i});
-                    if nrr==nr && ncc==nc && isnumeric(data{i})
-                        y(i,:)=data{i}(ind_upper);
-                    else
-                        ok=0; y=[]; 
-                        break
-                    end
-                end
-            else
-                ok=0; y=[];
-            end
-        end
-    else
-        ok=0; y=[];
-    end
-    if ok==1
-        %Number of nodes
-        DIMS.nodes=nr;
-        %Number of matrices
-        DIMS.observations=ns;
-    else
-        %Number of nodes
-        DIMS.nodes=0;
-        %Number of matrices
-        DIMS.observations=0;
-    end
-    
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%Read design matrix
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [X,ok,DIMS]=read_design(Name,DIMS)
-ok=1;
-if ischar(Name)
-    data=readUI(Name);
-else
-    data=Name;
-end
-if ~isempty(data)
-    [nr,nc,ns]=size(data);
-    if nr==DIMS.observations && nc>0 && ns==1 && isnumeric(data) 
-        X=data; 
-    else
-        ok=0; X=[];
-    end
-else
-    ok=0; X=[];
-end
-clear data
-if ok==1
-    %Number of predictors
-    DIMS.predictors=nc;
-else
-    DIMS.predictors=0;
-end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Read contrast
@@ -803,36 +665,30 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Read permutation exchange blocks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [exchange,ok]=read_exchange(Name,DIMS)
-ok=1;
-if ischar(Name) % SMN - again, replaced so not have to pass as string
-    data=readUI(Name);
-else
-    data=Name;
-end
-if ~isempty(data)
-    [nr,nc,ns]=size(data);
-    if nr==DIMS.observations && nc==1 && ns==1
-        exchange=data'; 
-    else
-        if nc==DIMS.observations && nr==1 && ns==1
-            exchange=data;
+function [exchange, ok] = read_exchange(data, DIMS)
+    ok = 1; % Initialize ok flag as true      
+    
+    % Check if data is not empty and has appropriate dimensions
+    if ~isempty(data)
+        [nr, nc] = size(data); % Get the dimensions of the data
+        
+        % Check if data is a column vector and matches the number of observations
+        if nc == 1 && nr == DIMS.observations
+            exchange = data; % Use data as exchange
         else
-        ok=0; exchange=[];
+            ok = 0; % Set ok to false if dimensions do not match
+            exchange = [];
         end
+    else
+        ok = 0; % Set ok to false if data is empty
+        exchange = [];
     end
-else
-    ok=0; exchange=[];
-end
-    %Set up exchange blocks
-    blks=unique(exchange); 
-    %Number of blocks
-    n_blks=length(blks);
-    %Number of observations per block
-    sz_blk=length(exchange)/n_blks;
-    if rem(sz_blk,1)>0
-        ok=0;
-        exchange=[];
+
+    % Additional checks or transformations can be performed here if necessary
+    if ok
+        % Verify that exchange blocks are properly defined if more checks are needed
+        unique_blocks = unique(exchange);
+        fprintf('Number of unique exchange blocks: %d\n', length(unique_blocks));
     end
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

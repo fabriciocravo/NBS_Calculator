@@ -12,6 +12,10 @@
     %% Potential issues
     % - nbs_method different than statistic_type - ?
     % - 'FDR' method and cluster type - what is it ?
+    % - read_exchange - says optional - how?    
+    % - Params.tthresh_first_level - nbs.STATS.thresh - not being corrected 
+    % for number of subjects
+    % - 
     %
     %% TODO
     % - shen atlas check 
@@ -34,6 +38,8 @@ if ~exist('Dataset', 'var')
 else
     % disp('Data already loaded')
 end
+
+%% Set n_nodes, n_var, n_repetitions 
 Params = setup_experiment_data(Params, Dataset);
 Params = create_output_directory(Params);
 Params.data_set = get_data_set_name(Dataset);
@@ -42,7 +48,7 @@ Params.data_set = get_data_set_name(Dataset);
 [current_path,~,~] = fileparts(mfilename('fullpath')); % assuming NBS_benchmarking is current folder
 addpath(genpath(current_path));
 
-setup_parallel_workers(Params.parallel, Params.n_workers);
+% setup_parallel_workers(Params.parallel, Params.n_workers);
 
 OutcomeData = Dataset.outcome;
 BrainData = Dataset.brain_data;
@@ -56,8 +62,8 @@ for ti = 1:length(tests)
     RP = Params;
     
     %% FOR DEBUGING 
-    % RP.all_cluster_stat_types = {'Constrained_FWER', 'Constrained'};
-    % disp('Debugging still here')
+    RP.all_cluster_stat_types = {'Constrained_FWER', 'Constrained'};
+    disp('Debugging still here')
 
     RP = infer_test_from_data(RP, OutcomeData.(t), BrainData);
     

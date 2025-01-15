@@ -16,8 +16,8 @@ function [n_node_nets, trilmask_net, edge_groups] = extract_atlas_related_parame
         trilmask_net = tril(true(n_node_nets));
   
         edge_groups = load_atlas_edge_groups(RP.n_nodes, RP.mapping_category);
-        edge_groups = tril(edge_groups,-1);
-        % edge_groups = triu(edge_groups, 1);
+        % edge_groups = tril(edge_groups,-1);
+        edge_groups = triu(edge_groups, 1);
         
     else
         % plus 1 because the script expects there to be a "0" (and will subsequently ignore..."
