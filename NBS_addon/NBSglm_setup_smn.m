@@ -34,16 +34,16 @@ function GLM=NBSglm_setup_smn(GLM)
 %
 
 %Number of predictors (including intercept)
-GLM.n_predictors=length(GLM.contrast);
+GLM.n_predictors = length(GLM.contrast);
 
 %Number of independent GLM's to fit
-GLM.n_GLMs=size(GLM.y,2);
+GLM.n_GLMs = size(GLM.y,2);
 
 %Number of observations
-GLM.n_observations=size(GLM.y,1);
+GLM.n_observations = size(GLM.y,1);
 
 %Determine nuisance predictors not in contrast
-GLM.ind_nuisance=find(~GLM.contrast);
+GLM.ind_nuisance = find(~GLM.contrast);
 
 if isfield(GLM,'exchange')
     %Set up exchange blocks

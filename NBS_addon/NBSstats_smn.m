@@ -84,6 +84,8 @@ end
 
 % Set statistic type to numeric - size (extent/intensity) (0), constrained (1), or TFCE (2)
 Intensity = 0;
+
+% Convert from string to numeric type
 switch STATS.statistic_type
 
     case 'Size'
@@ -142,22 +144,21 @@ end
 
 if ~isempty(STATS.test_stat)
     precomputed=1;
-    %Number of permutations
+    % Number of permutations
     K=size(STATS.test_stat,1)-1;
 else
-    precomputed=0;
-    %Get number of permutations and set GLM.perms to 1, since NBSglm will be called separately for each permutation
-    K=GLM.perms;
-    GLM.perms=1;
+    precomputed = 0;
+    % Get number of permutations and set GLM.perms to 1, since NBSglm will be called separately for each permutation
+    K = GLM.perms;
+    GLM.perms = 1;
 end
 
-
-do_parametric_for_2nd_level=NaN;
+do_parametric_for_2nd_level = NaN;
 if STATS.use_edge_groups
     
     % special multidimensional null for cNBS, SEA, Omnibus - cNBS
     n_nulls=length(STATS.edge_groups.unique);
-    do_parametric_for_2nd_level=1; % parametric or nonparametric; TODO: move - should be arg from user
+    do_parametric_for_2nd_level = 1; % parametric or nonparametric; TODO: move - should be arg from user
     
     % check mask
     [STATS.edge_groups, was_mask_flipped]=check_cNBS_mask(STATS.edge_groups);
@@ -169,15 +170,33 @@ null_dist=zeros(K, n_nulls);
 %Index of upper triangular elements of connectivity matrix
 N = STATS.N; % n nodes
 J = N*(N-1)/2; % n edges
-ind_upper=find(triu(ones(N,N),1)); 
+
+disp('Code with ind_upper is still in NBSStats_smm.m')
+% The if is here because the old code is a little important, I can't just
+% simply get rid of it right now 
+
+ind_upper = find(triu(ones(N,N),1)); 
+ind_mask = find(triu(STATS.mask)); 
+
+% Compare the two
+if ~isequal(ind_mask, ind_upper)
+    warning('The experiment mask indices do not match the default upper triangle indices.');
+else
+    disp('The experiment mask indices match the default upper triangle indices.');
+end
+
 
 %% Estimate cluster-level statistics - target and null
 
 % 1. Unpermuted cluster statistics
 y__target = GLM.y; % save for posterity
 GLM = NBSglm_setup_smn(GLM);
+
+%% Get the test statistics (edge_stats__target) in the GLM in get_univariate_stats with NBSglm_smn
 edge_stats__target = get_univariate_stats(STATS,GLM,precomputed,1);
 [cluster_stats__target, max_stat__target] = get_cluster_stats(edge_stats__target,STATS,ind_upper, N, Intensity,bgl);
+
+error('Debug')
 
 % 2, Permuted cluster statistics
 %First row of test_stat is the observed test statistics, so start at the second row
@@ -220,14 +239,15 @@ function [edge_groups,was_mask_flipped]=check_cNBS_mask(edge_groups)
     % TODO: might be more logical to have this in NBSrun_smn
     % Report zeros on the diagonal
     if any(diag(edge_groups.groups))
-        warning('Constrained mask has nonzero entries on the diagonal. Including diagonal entries is not advised but will not be stopped.');
+        warning(['Constrained mask has nonzero entries on the diagonal. ' ...
+                 'Including diagonal entries is not advised but will not be stopped.']);
     end
 
     %  Force mask to be upper triangular only
-    t=tril(edge_groups.groups,-1);
-    was_mask_flipped=0;
+    t = tril(edge_groups.groups,-1);
+    was_mask_flipped = 0;
     if any(t(:))
-        edge_groups.groups=triu(edge_groups.groups');
+        edge_groups.groups = triu(edge_groups.groups');
         was_mask_flipped=1;
     end
 end
@@ -285,12 +305,11 @@ if precomputed
     test_stat=STATS.test_stat(idx,:); % TODO: here and next section - should not threshold if doing TFCE
 else
     %Compute test statistics on the fly
-%     test_stat=zeros(2,N*(N-1)/2); %I don't think this preallocation makes a difference since NBSglm is creating the variable then copying?
     test_stat=NBSglm_smn(GLM); % replaced glm so only does one perm, not the orig and then another
 end
 end
 
-function [cluster_stats,null_stat] = get_cluster_stats(test_stat, STATS, ind_upper, N, Intensity,bgl)
+function [cluster_stats, null_stat] = get_cluster_stats(test_stat, STATS, ind_upper, N, Intensity,bgl)
 % Returns:  cluster_stats_map: edge-wise map of cluster statistics
 %           null_stat: permutation-specific statistic for building the null
 %
@@ -299,7 +318,6 @@ function [cluster_stats,null_stat] = get_cluster_stats(test_stat, STATS, ind_upp
 % TODO: note that max is the null test stat for first two stat types but not cNBS - 
 % should these functions instead just return the cluster vals but then do
 % the max outside? Tough bc integrated in the calculation
-
 
 switch STATS.statistic_type_numeric
     
@@ -325,9 +343,11 @@ switch STATS.statistic_type_numeric
         
     case {3,4} % do cNBS - returns a group-length vector
         
-        % TODO: this should be done (here and below - see case 5) directly from the test_stat without making mat - just need network IDs 
+        % TODO: this should be done (here and below - see case 5) directly 
+        % from the test_stat without making mat - just need network IDs 
+
         if STATS.use_preaveraged_constrained
-            cluster_stats=test_stat;
+            cluster_stats = test_stat;
         else
             test_stat_mat=zeros(N,N);
             test_stat_mat(ind_upper)=test_stat;
@@ -335,8 +355,9 @@ switch STATS.statistic_type_numeric
             
             cluster_stats = get_constrained_stats(test_stat_mat, STATS.edge_groups);
         end
-
-        null_stat = cluster_stats; % TODO - this is not a max value but instead 1 val for null per group - think of how to name
+        
+        % TODO - this is not a max value but instead 1 val for null per group - think of how to name
+        null_stat = cluster_stats; 
         
     case 5 % do Set Enrichment Analysis (SEA; GSEA minus the G bc not genetics)
         

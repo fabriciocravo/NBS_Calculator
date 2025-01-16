@@ -15,7 +15,21 @@
     % - read_exchange - says optional - how?    
     % - Params.tthresh_first_level - nbs.STATS.thresh - not being corrected 
     % for number of subjects
-    % - 
+    % - UI.size.ui - what is it?
+    % - Talk about commits not counting - should this become a new
+    % repository? 
+    % - UI.edge_groups.ui=edge_groups and
+    % - UI.use_preaveraged_constrained.ui=edge_groups are receiving the same
+    % variable? why?
+    % - Removed repeat - we always have to repeat, right?
+    % - was_mask_flipped is not being used - is one when mask and edge groups 
+    % are not in the same triangle 
+    % - triu and tril in the edge group appear to make no difference in the 
+    % final SSTATS.edge_groups
+    % - In NBSstats_smm.m the variable ind_upper, a upper triangular matrix
+    % is used to position the test statistics instead of the experiment
+    % mask - maybe this is causing the mismatch? 
+    % - It's in the comment - case 3,4, null_stats is not really stat
     %
     %% TODO
     % - shen atlas check 

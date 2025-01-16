@@ -1,4 +1,4 @@
-function [cluster_stat]=get_constrained_stats(test_stat,edge_groups)
+function [cluster_stat] = get_constrained_stats(test_stat,edge_groups)
 %GET_CONSTRAINED_STATS
 % Summarize stats by network defined by atlas
 % TODO: add option to do scaled by weight
@@ -17,10 +17,10 @@ if any(test_stat-test_stat')
 end
 
 % cluster_stat_full=zeros(size(test_stat));
-cluster_stat=zeros(1,length(edge_groups.unique));
+cluster_stat = zeros(1, length(edge_groups.unique));
 % get those constrained stats - average within nets
 for i=1:length(edge_groups.unique)
-    group_ids=edge_groups.groups==edge_groups.unique(i);
-    cluster_stat(i)=mean(test_stat(group_ids));
+    group_ids = edge_groups.groups == edge_groups.unique(i);
+    cluster_stat(i) = mean(test_stat(group_ids));
 %     cluster_stat_full(group_ids)=cluster_stat_by_group(i);
 end

@@ -45,26 +45,30 @@ function test_stat=NBSglm_smn(GLM)
 %   azalesky@unimelb.edu.au
 
 
-test_stat=zeros(1,GLM.n_GLMs);
+test_stat=zeros(1, GLM.n_GLMs);
 
-beta=zeros(GLM.n_predictors,GLM.n_GLMs);
-beta=GLM.X\GLM.y;
+beta = zeros(GLM.n_predictors,GLM.n_GLMs);
+beta = GLM.X\GLM.y;
 
 %Compute statistic of interest
 % TODO: consider moving to switch/case in glm_setup
 if strcmp(GLM.test,'onesample')
         
-        % TODO:  why isn't a standardized effect being calculated? this would influence the NBS extent/intensity calculation bc the initial threshold is a std effect size 
-        test_stat(:)=mean(GLM.y); 
+    % TODO:  why isn't a standardized effect being calculated? 
+    % this would influence the NBS extent/intensity calculation bc the initial threshold is a std effect size 
+    test_stat(:)=mean(GLM.y); 
 
 elseif strcmp(GLM.test,'ttest')
+
     resid=zeros(GLM.n_observations,GLM.n_GLMs);
     mse=zeros(GLM.n_observations,GLM.n_GLMs);
     resid=GLM.y-GLM.X*beta;
     mse=sum(resid.^2)/(GLM.n_observations-GLM.n_predictors);
     se=sqrt(mse*(GLM.contrast*inv(GLM.X'*GLM.X)*GLM.contrast'));
     test_stat(:)=(GLM.contrast*beta)./se;
+
 elseif strcmp(GLM.test,'ftest')
+
     sse=zeros(1,GLM.n_GLMs);
     ssr=zeros(1,GLM.n_GLMs);
     %Sum of squares due to error
@@ -98,6 +102,7 @@ elseif strcmp(GLM.test,'ftest')
         sse_red=sum((GLM.y-X_new*b_red).^2);
         ssr_red=sum((X_new*b_red-repmat(mean(GLM.y),GLM.n_observations,1)).^2);
         test_stat(:)=((ssr-ssr_red)/v)./(sse/(GLM.n_observations-GLM.n_predictors));
+
     end
 end
 
@@ -107,5 +112,5 @@ end
 %NaN elements to zero. This case is typical of connectivity matrices
 %populated using streamline counts, in which case some regional pairs are
 %not interconnected by any streamlines for all subjects. 
-test_stat(isnan(test_stat))=0; 
+test_stat(isnan(test_stat)) = 0; 
     

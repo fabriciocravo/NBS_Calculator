@@ -243,7 +243,7 @@ nbs.STATS.mask = UI.mask.ui;
 %Connectivity matrices
 
 % Matrices and dimensions and contrast
-nbs.GLM.y = UI.matrices.ui;
+nbs.GLM.y = UI.matrices.ui';
 nbs.GLM.X = UI.design.ui;
 DIMS = UI.DIMS;
 nbs.GLM.contrast = UI.contrast.ui;
@@ -323,11 +323,6 @@ catch
     UI.alpha.ok=0;
 end
 
-
-disp(nbs.STATS.alpha)
-disp(UI.alpha.ok)
-error('Still debugging');
-
 try 
     if ~isnumeric(nbs.STATS.alpha) || ~(nbs.STATS.alpha>0)
         UI.alpha.ok=0;
@@ -336,12 +331,13 @@ catch
     UI.alpha.ok=0;
 end
 
+
 %Statistic type [required to specify for now, but all should be optional w 'Size' as default]
 % if isfield(UI.statistic_type,'ui') ... ; elseif isfield(nbs,'NBS') ...; end
 try 
-    nbs.STATS.statistic_type=UI.statistic_type.ui; 
+    nbs.STATS.statistic_type = UI.statistic_type.ui; 
 catch
-    UI.statistic_type.ok=0; 
+    UI.statistic_type.ok = 0; 
 end 
 
 %Component size [required if statistic_type is Size or TFCE]
@@ -366,9 +362,9 @@ end
 if contains(nbs.STATS.statistic_type,'Constrained') || strcmp(nbs.STATS.statistic_type,'SEA') ...
     || (strcmp(nbs.STATS.statistic_type,'Omnibus') && strcmp(nbs.STATS.omnibus_type,'Multidimensional_cNBS'))
     try 
-        nbs.STATS.use_preaveraged_constrained=UI.use_preaveraged_constrained.ui; 
+        nbs.STATS.use_preaveraged_constrained = UI.use_preaveraged_constrained.ui; 
     catch 
-        UI.use_preaveraged_constrained.ok=0; 
+        UI.use_preaveraged_constrained.ok = 0; 
     end 
 end
 
@@ -399,27 +395,17 @@ else
     end
 end
 
-%{
-% Correction for second level for network-level inference
-if strcmp(nbs.STATS.statistic_type,'Constrained')
-    try nbs.STATS.do_Constrained_FWER_second_level=UI.do_Constrained_FWER_second_level.ui;
-    catch UI.do_Constrained_FWER_second_level.ok=0;
-    end
-else
-    nbs.STATS.do_Constrained_FWER_second_level=NaN;
-end
-%}
-
 %Number of nodes
-nbs.STATS.N=DIMS.nodes;
+nbs.STATS.N = DIMS.nodes; 
 
 %Do error checking on user inputs
-[msg,stop]=errorcheck(UI,DIMS,S);
+[msg,stop] = errorcheck(UI,DIMS,S);
+
 %Attempt to print result of error checking to listbox. If this fails, print
 % to screen
 try 
-    tmp=get(S.OUT.ls,'string'); 
-    set(S.OUT.ls,'string',[msg;tmp]); 
+    tmp = get(S.OUT.ls,'string'); 
+    set(S.OUT.ls,'string', [msg;tmp]); 
     drawnow;
 catch
     for i=1:length(msg)
@@ -430,94 +416,6 @@ end
 %cannot be read
 if stop 
     return
-end
-
-%Test statistic
-%Only compute the test statistic if it has not been previously computed or
-%the relevant inputs have changed 
-repeat=1;
-
-if isfield(nbs,'UI') 
-    %There has been a previous run
-    %Note that after a successful run, UI is copied to nbs.UI
-    %Check what inputs have changed since previous run
-    if ~repeat_glm(UI,nbs.UI)
-        repeat=0;
-    end
-end
-
-if repeat
-    %Check whether the number of elements in the test_stat matrix exceeds
-    %Limit
-    if (DIMS.nodes*(DIMS.nodes-1)/2)*(nbs.GLM.perms)<Limit
-        %Precompute if the number of elements in test_stat is less than
-        %Limit
-        str='Pre-randomizing data...';
-        try 
-            tmp=get(S.OUT.ls,'string');
-            set(S.OUT.ls,'string',[{str};tmp]);
-            drawnow;
-        catch 
-            fprintf([str,'\n']); 
-        end 
-
-        %Present a waitbar on the GUI showing progress of the randomization process
-        %Parent of the waitbar is the figure          
-        if isa(S,'struct') % only update if S is struct
-            try 
-                S.OUT.waitbar=uiwaitbar(WaitbarPos,S.fh); 
-                drawnow;  
-            catch
-                S.OUT.waitbar=[]; 
-            end
-        end
-
-        nbs.STATS.test_stat=zeros(nbs.GLM.perms+1,DIMS.nodes*(DIMS.nodes-1)/2); 
-        if isa(S,'struct') % only update if S is struct
-            
-            % TODO: this use of precomputed stats can be dangerous if not
-            % testing - look into throwing in a testing flag that will only do this when
-            % testing to speed things up
-%             try % get precomputed randomization if exists % SMN
-%                 load('tmp.mat');
-%                 str='(Using previously computed randomization. (WARNING: This is just an expediency for testing and ignores any updates to user-defined params.) )';
-%                 try tmp=get(S.OUT.ls,'string'); set(S.OUT.ls,'string',[{str};tmp]); drawnow;
-%                 catch;  fprintf([str,'\n']);
-%                 end
-%             catch
-            test_stat=NBSglm(nbs.GLM,S.OUT.waitbar);
-%                     save('tmp.mat','test_stat');
-%             end
-            nbs.STATS.test_stat=test_stat;
-            
-            delete(S.OUT.waitbar); 
-        
-        else
-            
-%             try % get precomputed randomization if exists
-%                 load('tmp.mat'); 
-%                 str='(Using previously computed randomization (TESTING ONLY - BEWARE: does not recalculate if user params change).)';
-%                 try tmp=get(S.OUT.ls,'string'); set(S.OUT.ls,'string',[{str};tmp]); drawnow;
-%                 catch;  fprintf([str,'\n']);
-%                 end 
-%             catch
-                test_stat=NBSglm(nbs.GLM);
-%                 save('tmp.mat','test_stat');
-%             end
-            nbs.STATS.test_stat=test_stat;
-        end
-    else
-        %Too big to precompute 
-        str='Too many randomizations to precompute...';
-        try 
-            tmp=get(S.OUT.ls,'string'); 
-            set(S.OUT.ls,'string',[{str};tmp]); 
-            drawnow;
-        catch  
-            fprintf([str,'\n']); 
-        end 
-        nbs.STATS.test_stat=[]; 
-    end
 end
 
 %Do NBS
@@ -532,9 +430,11 @@ if strcmp(UI.method.ui,'Run NBS')
         fprintf([str,'\n']); 
     end 
     try 
-        [nbs.NBS.n,nbs.NBS.con_mat,nbs.NBS.pval,nbs.NBS.edge_stats,nbs.NBS.cluster_stats] = NBSstats_smn(nbs.STATS,S.OUT.ls,nbs.GLM); % SMN
+        [nbs.NBS.n,nbs.NBS.con_mat,nbs.NBS.pval,nbs.NBS.edge_stats,nbs.NBS.cluster_stats] ...
+        = NBSstats_smn(nbs.STATS,S.OUT.ls,nbs.GLM); % SMN
     catch 
-        [nbs.NBS.n,nbs.NBS.con_mat,nbs.NBS.pval,nbs.NBS.edge_stats,nbs.NBS.cluster_stats] = NBSstats_smn(nbs.STATS,-1,nbs.GLM); 
+        [nbs.NBS.n,nbs.NBS.con_mat,nbs.NBS.pval,nbs.NBS.edge_stats,nbs.NBS.cluster_stats] ...
+        = NBSstats_smn(nbs.STATS,-1,nbs.GLM); 
     end % SMN
 
 %Do FDR
@@ -715,17 +615,8 @@ function [edge_groups,ok]=read_edge_groups(Name,DIMS)
     end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%There is not need to solve the GLM again if all of the GLM inputs have
-%remained the same
+% Check if there are any errors in the input
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function repeat=repeat_glm(UI,UIprev)
-    repeat=~all([strcmp(UI.matrices.ui,UIprev.matrices.ui),... 
-                 strcmp(UI.design.ui,UIprev.design.ui),... 
-                 strcmp(UI.contrast.ui,UIprev.contrast.ui),...
-                 strcmp(UI.test.ui,UIprev.test.ui),... 
-                 strcmp(UI.perms.ui,UIprev.perms.ui),...
-                 strcmp(UI.exchange.ui,UIprev.exchange.ui)]);
-
 function [msg,stop]=errorcheck(UI,DIMS,S)
     stop=1;
     %Mandatroy UI
@@ -830,8 +721,106 @@ function [msg,stop]=errorcheck(UI,DIMS,S)
     end
     
     % SMN: todo: add report of statistic type and size type
-    
-    
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Read connectivity matrices and vectorize the upper triangle
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [y,ok,DIMS]=read_matrices(Name)
+    ok=1;
+    if ischar(Name) % char input so load in by filename
+        data=readUI(Name);
+    else
+        data=Name;
+    end
+    if ~isempty(data)
+        [nr,nc,ns]=size(data);
+        if ns>0 && ~iscell(data) && isnumeric(data)
+            if nr~=nc && ns==1
+                % accept stuff that's been triangularized - smn
+                y=data';
+                nr_old=nr;
+                nr=ceil(sqrt(2*nr_old));
+                if nr_old==nr*(nr-1)/2
+                    ns=nc;
+                    nc=nr;
+                else
+                    ok=0; y=[];
+                    return
+                end
+            elseif nr==nc
+                ind_upper=find(triu(ones(nr,nr),1));
+                y=zeros(ns,length(ind_upper));
+                %Collapse matrices
+                for i=1:ns
+                    tmp=data(:,:,i);
+                    y(i,:)=tmp(ind_upper);
+                end
+            else
+                ok=0; y=[];
+                return
+            end
+        elseif iscell(data)
+            [nr,nc]=size(data{1});
+            ns=length(data);
+            if nr==nc && ns>0
+                ind_upper=find(triu(ones(nr,nr),1));
+                y=zeros(ns,length(ind_upper));
+                %Collapse matrices
+                for i=1:ns
+                    [nrr,ncc]=size(data{i});
+                    if nrr==nr && ncc==nc && isnumeric(data{i})
+                        y(i,:)=data{i}(ind_upper);
+                    else
+                        ok=0; y=[]; 
+                        break
+                    end
+                end
+            else
+                ok=0; y=[];
+            end
+        end
+    else
+        ok=0; y=[];
+    end
+    if ok==1
+        %Number of nodes
+        DIMS.nodes=nr;
+        %Number of matrices
+        DIMS.observations=ns;
+    else
+        %Number of nodes
+        DIMS.nodes=0;
+        %Number of matrices
+        DIMS.observations=0;
+    end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Read design matrix
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [X,ok,DIMS]=read_design(Name,DIMS)
+ok=1;
+if ischar(Name)
+    data=readUI(Name);
+else
+    data=Name;
+end
+if ~isempty(data)
+    [nr,nc,ns]=size(data);
+    if nr==DIMS.observations && nc>0 && ns==1 && isnumeric(data) 
+        X=data; 
+    else
+        ok=0; X=[];
+    end
+else
+    ok=0; X=[];
+end
+clear data
+if ok==1
+    %Number of predictors
+    DIMS.predictors=nc;
+else
+    DIMS.predictors=0;
+end
     
     
 %% SMN's comments: edits needed to run NBSrun from Matlab command line (i.e., no GUI)
