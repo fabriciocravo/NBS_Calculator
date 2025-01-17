@@ -53,10 +53,15 @@ beta = GLM.X\GLM.y;
 %Compute statistic of interest
 % TODO: consider moving to switch/case in glm_setup
 if strcmp(GLM.test,'onesample')
-        
-    % TODO:  why isn't a standardized effect being calculated? 
-    % this would influence the NBS extent/intensity calculation bc the initial threshold is a std effect size 
-    test_stat(:)=mean(GLM.y); 
+
+    % Compute the residuals
+    resid = GLM.y - GLM.X * beta; 
+    % Mean squared error
+    mse = sum(resid.^2) / (GLM.n_observations - GLM.n_predictors); 
+    % Compute the standard error using contrast
+    se = sqrt(mse .* (GLM.contrast * inv(GLM.X' * GLM.X) * GLM.contrast'));
+    % Compute the t-statistic
+    test_stat(:) = (GLM.contrast * beta) ./ se;
 
 elseif strcmp(GLM.test,'ttest')
 

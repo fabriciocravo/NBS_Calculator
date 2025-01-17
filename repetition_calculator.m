@@ -35,6 +35,10 @@
     % permutations are equivalent to original 
     % - On NBSedge_level_parametric_corr - t-test (for t2) assumes that the
     % number of subjects in both groups is equal 
+    % - NBSedge_level_parametric_corr - did not have a onesample
+    % implementation
+    % - NBSglm_smn.m is using a simple average to calculate the t-test
+    % statistics for the onesample case
     %
     %% TODO
     % - shen atlas check 
@@ -96,8 +100,6 @@ for ti = 1:length(tests)
     RP = setup_parameters_for_rp(RP);
 
     run_benchmarking(RP, Y)
-
-    return;
 
     %if RP.testing == 1 && ti == 2
     %    return;

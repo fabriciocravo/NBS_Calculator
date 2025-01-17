@@ -420,18 +420,27 @@ if stop
     return
 end
 
-if (DIMS.nodes*(DIMS.nodes-1)/2)*(nbs.GLM.perms)<Limit
+if (DIMS.nodes*(DIMS.nodes-1)/2)*(nbs.GLM.perms) < Limit
 
     %Precompute if the number of elements in test_stat is less than
     %Limit
     str='Pre-randomizing data...';
-    try tmp=get(S.OUT.ls,'string'); set(S.OUT.ls,'string',[{str};tmp]); drawnow;
-    catch;  fprintf([str,'\n']); end 
+    try 
+        tmp=get(S.OUT.ls,'string'); 
+        set(S.OUT.ls,'string',[{str};tmp]); 
+        drawnow;
+    catch
+        fprintf([str,'\n']); 
+    end 
     %Present a waitbar on the GUI showing progress of the randomization process
     %Parent of the waitbar is the figure          
     if isa(S,'struct') % only update if S is struct
-        try S.OUT.waitbar=uiwaitbar(WaitbarPos,S.fh); drawnow;  
-        catch; S.OUT.waitbar=[]; end
+        try 
+            S.OUT.waitbar = uiwaitbar(WaitbarPos,S.fh);
+            drawnow;  
+        catch 
+            S.OUT.waitbar = []; 
+        end
     end
     nbs.STATS.test_stat=zeros(nbs.GLM.perms+1,DIMS.nodes*(DIMS.nodes-1)/2); 
     if isa(S,'struct') % only update if S is struct
@@ -456,7 +465,7 @@ else
 end
 
 %Do NBS
-if strcmp(UI.method.ui,'Run NBS')
+if strcmp(UI.method.ui, 'Run NBS')
 
     str = sprintf('Computing network components (%s)...',nbs.STATS.statistic_type);
     try 

@@ -64,8 +64,8 @@ J=N*(N-1)/2; % n edges
 ind_upper=find(triu(ones(N,N),1)); 
 
 % Uncorrected p-values
-GLM=NBSglm_setup_smn(GLM);
-edge_stats__target=NBSglm_smn(GLM);
+GLM = NBSglm_setup_smn(GLM);
+edge_stats__target = NBSglm_smn(GLM);
 
 if strcmp(GLM.test,'onesample') 
     % Calculate degrees of freedom for one-sample t-test
@@ -79,7 +79,7 @@ elseif strcmp(GLM.test,'ttest')
     %elseif strcmp(ttest_type,'unpaired')
     %    df=GLM.n_observations-2; % assuming equal variances
     %end
-    p_uncorr = tcdf(-edge_stats__target,df);
+    p_uncorr = tcdf(-edge_stats__target, df);
 elseif strcmp(GLM.test,'ftest') 
     error('Under development.');
     df1=GLM.n_predictors-1; % TODO: check this

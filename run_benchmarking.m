@@ -121,7 +121,9 @@ function run_benchmarking(RP, Y)
                 
                 % Be careful with this parfor commented lol
                 parfor (i_rep=1: RP.n_repetitions)
-                
+
+                % Do not erase the comment bellow, it is used for debugging
+                % when running not in parallel 
 % disp('Parof');  for i_rep = 1:RP.n_repetitions
                     
                     % Encapsulation of the most computationally intensive loop
