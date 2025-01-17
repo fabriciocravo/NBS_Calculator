@@ -80,7 +80,8 @@ Params.edge_groups_file ='./NBS_benchmarking/NBS_addon/SchizophreniaExample/Exam
 
 % NBS parameters
 Params.nbs_method = 'Run NBS';       % 'Run NBS' (all procedures except edge-level) | 'Run Parametric Edge-Level Correction' | 'Run FDR' (nonparametric edge-level FDR correction)
-Params.nbs_test_stat = 't-test';     % 't-test' | 'one-sample' | 'F-test'
+% not needed anymore
+% Params.nbs_test_stat = 't-test';     % 't-test' | 'one-sample' | 'F-test'
                             % Current model (see above design matrix) only designed for t-test
 Params.n_perms = 1000;               % recommend n_perms=5000 to appreciably reduce uncertainty of p-value estimation (https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Randomise/Theory)
 Params.n_perms_gt = 1000;

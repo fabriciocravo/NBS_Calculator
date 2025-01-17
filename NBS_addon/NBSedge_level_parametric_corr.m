@@ -51,7 +51,8 @@ end
 if exist('components','file')==2
     %Use components.m provided by MatlabBGL, otherwise use get_components.m
     bgl=1;
-else bgl=0;
+else 
+    bgl=0;
 end
 
 % Specify no permutations for GLM
@@ -67,7 +68,10 @@ GLM=NBSglm_setup_smn(GLM);
 edge_stats__target=NBSglm_smn(GLM);
 
 if strcmp(GLM.test,'onesample') 
-    error('Under development.');
+    % Calculate degrees of freedom for one-sample t-test
+    df = GLM.n_observations - 1; 
+    % Calculate uncorrected p-values from the t distribution
+    p_uncorr = tcdf(-edge_stats__target, df);
 elseif strcmp(GLM.test,'ttest') 
     %if strcmp(ttest_type,'paired') % TODO: create
     % warning('Assuming paired sample and right-tailed t-test.');

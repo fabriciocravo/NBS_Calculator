@@ -13,7 +13,7 @@ function [n_node_nets, trilmask_net, edge_groups] = extract_atlas_related_parame
         template_net = summarize_matrix_by_atlas(Y(:, 1), 'suppressimg', 1, 'mask', RP.mask);
     
         n_node_nets = size(template_net, 1); % square
-        trilmask_net = tril(true(n_node_nets));
+        % trilmask_net = tril(true(n_node_nets));
   
         edge_groups = load_atlas_edge_groups(RP.n_nodes, RP.mapping_category);
         % edge_groups = tril(edge_groups,-1);

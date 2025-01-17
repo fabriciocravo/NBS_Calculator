@@ -197,7 +197,9 @@ global nbs
 %Don't precompute randomizations if the number of test statistics populates 
 %a matrix with more elements than Limit. Slows down computation but saves 
 %memory.   
-Limit=10^8/3;
+% Redefine limit for now - to skip
+% Limit=10^8/3;
+Limit = 1;
 
 %Waitbar position in figure
 WaitbarPos=[0.69 0.021 0.05 0.21];
@@ -418,6 +420,41 @@ if stop
     return
 end
 
+if (DIMS.nodes*(DIMS.nodes-1)/2)*(nbs.GLM.perms)<Limit
+
+    %Precompute if the number of elements in test_stat is less than
+    %Limit
+    str='Pre-randomizing data...';
+    try tmp=get(S.OUT.ls,'string'); set(S.OUT.ls,'string',[{str};tmp]); drawnow;
+    catch;  fprintf([str,'\n']); end 
+    %Present a waitbar on the GUI showing progress of the randomization process
+    %Parent of the waitbar is the figure          
+    if isa(S,'struct') % only update if S is struct
+        try S.OUT.waitbar=uiwaitbar(WaitbarPos,S.fh); drawnow;  
+        catch; S.OUT.waitbar=[]; end
+    end
+    nbs.STATS.test_stat=zeros(nbs.GLM.perms+1,DIMS.nodes*(DIMS.nodes-1)/2); 
+    if isa(S,'struct') % only update if S is struct
+        
+        test_stat=NBSglm(nbs.GLM,S.OUT.waitbar);
+        nbs.STATS.test_stat=test_stat;
+        
+        delete(S.OUT.waitbar); 
+    
+    else
+
+        test_stat=NBSglm(nbs.GLM);
+        nbs.STATS.test_stat=test_stat;
+    end
+else
+
+    %Too big to precompute 
+    str='Too many randomizations to precompute...';
+    try tmp=get(S.OUT.ls,'string'); set(S.OUT.ls,'string',[{str};tmp]); drawnow;
+    catch;  fprintf([str,'\n']); end 
+    nbs.STATS.test_stat=[]; 
+end
+
 %Do NBS
 if strcmp(UI.method.ui,'Run NBS')
 
@@ -494,17 +531,25 @@ nbs.NBS.test_stat(ind_upper)=test_stat(1,:);
 nbs.NBS.test_stat=nbs.NBS.test_stat+nbs.NBS.test_stat';
 
 %Display significant results with NBSview only if node coordinates provided
-if nbs.NBS.n>0 && UI.node_coor.ok
-    NBSview(nbs.NBS); str=[];
+if nbs.NBS.n>0 && UI.node_coor.ok && false
+
+    NBSview(nbs.NBS); 
+    str=[];
 elseif nbs.NBS.n>0 && ~UI.node_coor.ok
+
     str='Significant result - specify Node Coordinates to view';
-    
 else
     str='No significant result'; 
 end
+
 if ~isempty(str)
-    try tmp=get(S.OUT.ls,'string'); set(S.OUT.ls,'string',[{str};tmp]); drawnow;
-    catch;  fprintf([str,'\n']); end
+    try 
+        tmp=get(S.OUT.ls,'string'); 
+        set(S.OUT.ls,'string',[{str};tmp]); 
+        drawnow;
+    catch 
+        fprintf([str,'\n']); 
+    end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -531,7 +576,7 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Read node coordinates
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function [node_coor,ok]=read_node_coor(Name,DIMS)
+function [node_coor,ok] = read_node_coor(Name,DIMS)
 ok=1;
 data=readUI(Name);
 if ~isempty(data)

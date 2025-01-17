@@ -76,6 +76,23 @@ function RP = infer_test_from_data(RP, TestData, BrainData)
     else
         error('Could not infer test type. May be categorical.')
     end
+
+    %% TODO add the test for r 
+    switch test_type
+        
+        case 't'
+            RP.nbs_test_stat = 'onesample';
+
+        case 't2'
+             RP.nbs_test_stat = 't-test';
+
+        case 'pt'
+            RP.nbs_test_stat = 't-test';
+        
+        case 'r'
+            error('Not implemented yet')
+
+    end
     
     % this error might not be rechable, but it's here to avoid
     % assigning unknow to test_type_list

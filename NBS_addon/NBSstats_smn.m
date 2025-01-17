@@ -171,19 +171,9 @@ null_dist=zeros(K, n_nulls);
 N = STATS.N; % n nodes
 J = N*(N-1)/2; % n edges
 
-disp('Code with ind_upper is still in NBSStats_smm.m')
 % The if is here because the old code is a little important, I can't just
 % simply get rid of it right now 
-
-ind_upper = find(triu(ones(N,N),1)); 
-ind_mask = find(triu(STATS.mask)); 
-
-% Compare the two
-if ~isequal(ind_mask, ind_upper)
-    warning('The experiment mask indices do not match the default upper triangle indices.');
-else
-    disp('The experiment mask indices match the default upper triangle indices.');
-end
+ind_upper = find(triu(STATS.mask));
 
 
 %% Estimate cluster-level statistics - target and null
@@ -196,13 +186,12 @@ GLM = NBSglm_setup_smn(GLM);
 edge_stats__target = get_univariate_stats(STATS,GLM,precomputed,1);
 [cluster_stats__target, max_stat__target] = get_cluster_stats(edge_stats__target,STATS,ind_upper, N, Intensity,bgl);
 
-error('Debug')
-
 % 2, Permuted cluster statistics
 %First row of test_stat is the observed test statistics, so start at the second row
 for i=2:K+1
     
     GLM.y = permute_signal(GLM);
+
     edge_stats = get_univariate_stats(STATS, GLM, precomputed, i);
     [~, max_stat] = get_cluster_stats(edge_stats, STATS, ind_upper, N, Intensity,bgl);
     
@@ -211,21 +200,28 @@ for i=2:K+1
     
     % only print every hundred
     if mod((i-1),100)==0
-        str=sprintf('| %5d/%5d perms complete | latest element in null: %6.1f |',i-1,K,null_dist(i-1,end));
+        str=sprintf('| %5d/%5d perms complete | latest element in null: %6.1f |', i-1 , K, null_dist(i-1,end));
         % display no more than nDisp most recent permutations
         new_str=[str,{new_str{1:min(nDisp,length(new_str))}}]';
-        try set(H,'string',[new_str;pre_str]); drawnow;
-        catch;  fprintf([str,'\n']); end
+        try 
+            set(H,'string',[new_str;pre_str]);
+            drawnow;
+        catch 
+            fprintf([str,'\n']); 
+        end
     end
     
 end
 
-
 %% Perform correction
 % This gets cluster-based statistics satisfying FWER threshold
-[pval]=perform_correction(null_dist,cluster_stats__target,max_stat__target,do_parametric_for_2nd_level,STATS,K);
-any_significant=any(pval(:)<STATS.alpha);
-con_mat=0; % this is for original NBS visualization in GUI and needs to be in a specific format; instead, we'll use the stats directly
+[pval] = perform_correction(null_dist,cluster_stats__target,max_stat__target,do_parametric_for_2nd_level,STATS,K);
+any_significant = any(pval(:) < STATS.alpha);
+ % this is for original NBS visualization in GUI and needs to be in a specific format; 
+ % instead, we'll use the stats directly
+con_mat = 0;
+
+%error('Debug')
 
 end
 
@@ -252,61 +248,71 @@ function [edge_groups,was_mask_flipped]=check_cNBS_mask(edge_groups)
     end
 end
 
-function y_perm=permute_signal(GLM)
-% Permute variable
-%
-% SMN: all of these said "use the same permutation for every GLM" but I
-% don't think this is true... or I don't understand what they meant by this
+function y_perm = permute_signal(GLM)
+    % Permute variable
+    %
+    % SMN: all of these said "use the same permutation for every GLM" but I
+    % don't think this is true... or I don't understand what they meant by this
 
-if isempty(GLM.ind_nuisance) 
-    %Permute signal 
-    if exist('GLM.blk_ind','var')
-        for j=1:GLM.n_blks
-            y_perm(GLM.blk_ind(j,:),:)=...
-            GLM.y(GLM.blk_ind(j,randperm(GLM.sz_blk)),:);
-        end
-    else                
-        y_perm=GLM.y(randperm(GLM.n_observations)',:);
+    if strcmp(GLM.test,'onesample')
+        do_sign_flip = 1;
+    else
+        do_sign_flip = 0;
     end
-else
-    %Permute residuals
-    % TODO: this returns altered GLM, not y_perm
-    if exist('blk_ind','var')
-        for j=1:GLM.n_blks
-            GLM.resid_y(GLM.blk_ind(j,:),:)=...
-            GLM.resid_y(GLM.blk_ind(j,randperm(GLM.sz_blk)),:);
+
+    if isempty(GLM.ind_nuisance) 
+        %% Change here 
+        %Permute signal 
+        if ~do_sign_flip %% TODO: check blk_ind
+            if exist('GLM.blk_ind','var')
+                for j=1:GLM.n_blks
+                    y_perm(GLM.blk_ind(j,:),:)= ...
+                    GLM.y(GLM.blk_ind(j,randperm(GLM.sz_blk)),:);
+                end
+            else                
+                y_perm = GLM.y(randperm(GLM.n_observations)',:);
+            end
+        else 
+            y_perm = GLM.y.*repmat(sign(rand(GLM.n_observations,1)-0.5),1,GLM.n_GLMs);
         end
     else
-        GLM.resid_y=GLM.resid_y(randperm(GLM.n_observations)',:);
-    end
-
-    %Add permuted residual back to nuisance signal, giving a realisation 
-    %of the data under the null hypothesis (Freedma & Lane)
+        %Permute residuals
+        % TODO: this returns altered GLM, not y_perm
+        if exist('blk_ind','var')
+            for j=1:GLM.n_blks
+                GLM.resid_y(GLM.blk_ind(j,:),:)=...
+                GLM.resid_y(GLM.blk_ind(j,randperm(GLM.sz_blk)),:);
+            end
+        else
+            GLM.resid_y=GLM.resid_y(randperm(GLM.n_observations)',:);
+        end
     
-    if ~isempty(GLM.ind_nuisance)
-        y_perm=GLM.resid_y+[GLM.X(:,GLM.ind_nuisance)]*GLM.b_nuisance;
+        %Add permuted residual back to nuisance signal, giving a realisation 
+        %of the data under the null hypothesis (Freedma & Lane)
+        
+        if ~isempty(GLM.ind_nuisance)
+            y_perm=GLM.resid_y+[GLM.X(:,GLM.ind_nuisance)]*GLM.b_nuisance;
+        end
+    
+        %Flip signs
+        %Don't permute first run % TODO: SMN - why is this here and not
+        %elsewhere? also, shuffling already happened - whyis this
+        %happening again here??
+        if do_sign_flip
+            y_perm=y_perm.*repmat(sign(rand(GLM.n_observations,1)-0.5),1,GLM.n_GLMs);
+        end
+    
     end
-
-    %Flip signs
-    %Don't permute first run % TODO: SMN - why is this here and not
-    %elsewhere? also, shuffling already happened - whyis this
-    %happening again here??
-    if strcmp(GLM.test,'onesample')
-        y_perm=y_perm.*repmat(sign(rand(GLM.n_observations,1)-0.5),1,GLM.n_GLMs);
-    end
-
 end
-end
-
 
 function [test_stat]=get_univariate_stats(STATS,GLM,precomputed,idx)
-if precomputed
-    %Precomputed test statistics
-    test_stat=STATS.test_stat(idx,:); % TODO: here and next section - should not threshold if doing TFCE
-else
-    %Compute test statistics on the fly
-    test_stat=NBSglm_smn(GLM); % replaced glm so only does one perm, not the orig and then another
-end
+    if precomputed
+        %Precomputed test statistics
+        test_stat=STATS.test_stat(idx,:); % TODO: here and next section - should not threshold if doing TFCE
+    else
+        %Compute test statistics on the fly
+        test_stat=NBSglm_smn(GLM); % replaced glm so only does one perm, not the orig and then another
+    end
 end
 
 function [cluster_stats, null_stat] = get_cluster_stats(test_stat, STATS, ind_upper, N, Intensity,bgl)
@@ -334,7 +340,7 @@ switch STATS.statistic_type_numeric
     case 2 % do TFCE
         
         test_stat_mat=zeros(N,N);
-        test_stat_mat(ind_upper)=test_stat;
+        test_stat_mat(ind_upper) = test_stat;
         test_stat_mat=(test_stat_mat+test_stat_mat');
         
         cluster_stats=matlab_tfce_transform(test_stat_mat,'matrix');
@@ -425,101 +431,108 @@ switch STATS.statistic_type_numeric
 end
 
 
-function [pval]=perform_correction(null_dist,target_stat,max_target_stat,do_parametric_for_2nd_level,STATS,K)
+function [pval] = perform_correction(null_dist,target_stat,max_target_stat,do_parametric_for_2nd_level,STATS,K)
 % Returns map of FWER-corrected pvals
 %
 % For multidimensional nulls (cNBS):
 %   1st level: get within-group (uncorrected) pvals - nonparametric
 %   2nd level: get cross-group FWER-corrected pvals - parametric or nonparametric
+    disp(STATS.statistic_type_numeric)
 
-switch STATS.statistic_type_numeric
-    
-    case 1 % NBS
-        
-        [unique_stats,~,idx_unique_to_target_stat]=unique(target_stat); % added so didn't need to pass
-        unique_pvals=arrayfun(@(this_stat) sum(+(this_stat<null_dist))/K, full(unique_stats)); % TODO: return here, prob expensive to convert sparse to full
-        pval=unique_pvals(idx_unique_to_target_stat); % TODO: this puts stuff back into a vector but we want it in the original matrix dim to match cluster outputs
-        
-    case 2 % TFCE
-        
-        pval=arrayfun(@(this_stat) sum(+(this_stat<null_dist))/K, target_stat);
-        
-    case {3, 4, 5} % cNBS and SEA
-        
-        % estimate pvalue for each network
-        pval_uncorr=zeros(size(STATS.edge_groups.unique));
-        for i=1:length(STATS.edge_groups.unique)
-            pval_uncorr(i)=sum(+(max_target_stat(i)<null_dist(:,i)))/K;
-        end
-        
-        % maybe faster:
-%         n_groups=length(STATS.edge_groups.unique);
-%         pval_uncorr=arrayfun(@(this_group) sum(+(null_dist_multiple(,:)>=test_stat(this_group)))/K, n_groups); 
-        
-        if do_parametric_for_2nd_level
-            if STATS.statistic_type_numeric==4 % Bonferroni
-            %if STATS.do_Constrained_FWER_second_level % Bonferroni
-                pval=pval_uncorr*length(STATS.edge_groups.unique); % FWER-corrected p-vals
-                %sprintf('Trying new Bonferroni 2nd level\n');
-            else % FDR
-                
-                % TODO: think more about procedure/output into pval variable
-%                 [~,pval,~,~]=mafdr(pval_uncorr); % FDR-corrected p-vals
-                % requires bioinformatics toolbox, so we're using the Simes procedure of FDR as
-                % implemented in NBSfdr:
-                
-                %Simes procedure
-                J=length(pval_uncorr);
-                ind_srt=zeros(1,J); 
-                [pval_uncorr_sorted,ind_srt]=sort(pval_uncorr);
-                tmp=(1:J)/J*STATS.alpha;
-                ind_sig=pval_uncorr_sorted<=tmp;
-                
-                pval=ones(1,J);
-                pval(ind_srt(ind_sig))=0; % here, binary: 0 means significant (<alpha), 1 is not significant (>alpha) 
-                
-            end
-            pval(pval>1)=1;
+    switch STATS.statistic_type_numeric 
+
+        case 1 % NBS
             
-        else % bootstrapping
-            error('Stopping - this section is under development and not ready for use');
-            if STATS.statistic_type_numeric==4 % Bonferroni
-            %if STATS.do_Constrained_FWER_second_level
-                maxima_sorted=sort(max(null_dist_multiple),'descend');
-                n_above_alpha=STATS.alpha*K;
-                test_stat_threshold=maxima_sorted(n_above_alpha);
-                % TODO: still need to calculate p-vals while accounting for non-interchangeability
-            else
-                ranked_null_dist_multiple=zeros(size(null_dist_multiple));
-                for i=1:length(STATS.edge_groups.unique)
-                    [~,p] = sort(null_dist_multiple(i,:),'descend');
-                    r = 1:length(Data);
-                    ranked_null_dist_multiple(i,p) = r;
+            % - added so didn't need to pass
+            % - TODO: return here, prob expensive to convert sparse to full
+            % - TODO: this puts stuff back into a vector but we want it in the original matrix dim 
+            % to match cluster outputs
+            [unique_stats,~,idx_unique_to_target_stat]=unique(target_stat);
+            unique_pvals=arrayfun(@(this_stat) sum(+(this_stat<null_dist))/K, full(unique_stats)); 
+            pval=unique_pvals(idx_unique_to_target_stat); 
+            
+        case 2 % TFCE
+            
+            pval=arrayfun(@(this_stat) sum(+(this_stat<null_dist))/K, target_stat);
+            
+        case {3, 4, 5} % cNBS and SEA
+            
+            % estimate pvalue for each network
+            pval_uncorr=zeros(size(STATS.edge_groups.unique));
+            for i=1:length(STATS.edge_groups.unique)
+                pval_uncorr(i) = sum(+(max_target_stat(i) < null_dist(:,i)))/K;
+            end
+            
+            % maybe faster:
+            % n_groups=length(STATS.edge_groups.unique);
+            % pval_uncorr=arrayfun(@(this_group) sum(+(null_dist_multiple(,:)>=test_stat(this_group)))/K, n_groups); 
+            
+            if do_parametric_for_2nd_level
+                if STATS.statistic_type_numeric == 4 % Bonferroni
+                    % FWER-corrected p-vals
+                    % FWER-corrected p-vals
+                    pval=pval_uncorr*length(STATS.edge_groups.unique); 
+                    % sprintf('Trying new Bonferroni 2nd level\n');
+                else % FDR
+                    
+                    % TODO: think more about procedure/output into pval variable
+                    % [~,pval,~,~]=mafdr(pval_uncorr); % FDR-corrected p-vals
+                    % requires bioinformatics toolbox, so we're using the Simes procedure of FDR as
+                    % implemented in NBSfdr
+                    
+                    %Simes procedure
+                    J = length(pval_uncorr);
+                    ind_srt = zeros(1,J); 
+                    [pval_uncorr_sorted,ind_srt]=sort(pval_uncorr);
+                    tmp=(1:J)/J*STATS.alpha;
+                    ind_sig=pval_uncorr_sorted<=tmp;
+                    
+                    % here, binary: 0 means significant (<alpha), 1 is not significant (>alpha) 
+                    pval=ones(1,J);
+                    pval(ind_srt(ind_sig))=0; 
+                    
                 end
-                % TODO: under development
+                pval(pval>1)=1;
+                
+            else % bootstrapping
+                error('Stopping - this section is under development and not ready for use');
+                if STATS.statistic_type_numeric==4 % Bonferroni
+                %if STATS.do_Constrained_FWER_second_level
+                    maxima_sorted=sort(max(null_dist_multiple),'descend');
+                    n_above_alpha=STATS.alpha*K;
+                    test_stat_threshold=maxima_sorted(n_above_alpha);
+                    % TODO: still need to calculate p-vals while accounting for non-interchangeability
+                else
+                    ranked_null_dist_multiple=zeros(size(null_dist_multiple));
+                    for i=1:length(STATS.edge_groups.unique)
+                        [~,p] = sort(null_dist_multiple(i,:),'descend');
+                        r = 1:length(Data);
+                        ranked_null_dist_multiple(i,p) = r;
+                    end
+                    % TODO: under development
+                end
             end
+            
+        case 6 % Omnibus
+            
+            if STATS.omnibus_type_numeric==5 % Special for constrained
+                % TODO: under development
+                
+                % Calculate Euclidean distance for each permutation from null centroid
+                null_centroid=mean(null_dist); %  mean of each network across permutations (or assume 0?)
+                null_dist__eucl_dist=sqrt(sum((null_dist-null_centroid).^2));
+                
+                % Calculate Euclidean distance for target stat from null centroid
+                target_stat__eucl_dist=sqrt(sum((target_stat-null_centroid).^2));
+                
+                % Compare target distance to null distances
+                pval=sum(+(target_stat__eucl_dist<null_dist__eucl_dist))/K;
+            
+            else
+                pval=sum(+(target_stat<null_dist))/K;
+            end
+            
         end
-        
-    case 6 % Omnibus
-        
-        if STATS.omnibus_type_numeric==5 % Special for constrained
-            % TODO: under development
-            
-            % Calculate Euclidean distance for each permutation from null centroid
-            null_centroid=mean(null_dist); %  mean of each network across permutations (or assume 0?)
-            null_dist__eucl_dist=sqrt(sum((null_dist-null_centroid).^2));
-            
-            % Calculate Euclidean distance for target stat from null centroid
-            target_stat__eucl_dist=sqrt(sum((target_stat-null_centroid).^2));
-            
-            % Compare target distance to null distances
-            pval=sum(+(target_stat__eucl_dist<null_dist__eucl_dist))/K;
-        
-        else
-            pval=sum(+(target_stat<null_dist))/K;
-        end
-        
-    end
 
 end
 

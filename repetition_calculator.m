@@ -29,7 +29,12 @@
     % - In NBSstats_smm.m the variable ind_upper, a upper triangular matrix
     % is used to position the test statistics instead of the experiment
     % mask - maybe this is causing the mismatch? 
-    % - It's in the comment - case 3,4, null_stats is not really stat
+    % - case 3,4, null_stats is not really stat, in get_constrained_stats
+    % in NBSstats_smn.m
+    % - permute_signal(GLM); - for Size, TFCE, Constrained_FWER, Contrained,  
+    % permutations are equivalent to original 
+    % - On NBSedge_level_parametric_corr - t-test (for t2) assumes that the
+    % number of subjects in both groups is equal 
     %
     %% TODO
     % - shen atlas check 
@@ -62,7 +67,7 @@ Params.data_set = get_data_set_name(Dataset);
 [current_path,~,~] = fileparts(mfilename('fullpath')); % assuming NBS_benchmarking is current folder
 addpath(genpath(current_path));
 
-% setup_parallel_workers(Params.parallel, Params.n_workers);
+setup_parallel_workers(Params.parallel, Params.n_workers);
 
 OutcomeData = Dataset.outcome;
 BrainData = Dataset.brain_data;
@@ -75,9 +80,9 @@ for ti = 1:length(tests)
     % RP - stands for Repetition Parameters
     RP = Params;
     
-    %% FOR DEBUGING 
-    RP.all_cluster_stat_types = {'Constrained_FWER', 'Constrained'};
-    disp('Debugging still here')
+    %% FOR DEBUGING
+    %RP.all_cluster_stat_types = {'Constrained_FWER', 'Constrained'};
+    %disp('Debugging still here')
 
     RP = infer_test_from_data(RP, OutcomeData.(t), BrainData);
     
