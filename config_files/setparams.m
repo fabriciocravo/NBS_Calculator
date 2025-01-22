@@ -14,7 +14,8 @@ function Params = setparams()
 Params.system_dependent_paths=0;
 Params.save_directory = './power_calculator_results/';
 Params.data_dir = '/Users/f.cravogomes/Desktop/Cloned Repos/NBS_Calculator/data/s_hcp_fc_noble_tasks.mat';
-Params.gt_data_dir = '/Users/f.cravogomes/Desktop/initial_results_power_calculator/gt_data/';
+Params.gt_data_dir = '/Users/f.cravogomes/Desktop/Cloned Repos/NBS_Calculator/power_calculator_results/ground_truth/';
+Params.gt_origin = 'power_calculator';
 
 % If recalculate is equal to 1 - recalculate
 Params.recalculate = 0;
@@ -116,7 +117,7 @@ Params.use_preaveraged_constrained = 0; % 1 | 0
 %%%%% DEVELOPERS ONLY %%%%%
 % Use a small subset of permutations for faster development -- inappropriate for inference
 
-Params.testing = false;
+Params.testing = true;
 Params.test_n_perms = '20';
 Params.test_n_repetitions = 20;
 Params.test_n_workers = 8;

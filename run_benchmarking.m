@@ -115,16 +115,17 @@ function run_benchmarking(RP, Y)
                     fprintf('\n*** TESTING MODE ***\n\n')
                 end
                 
-                % fprintf(['Starting benchmarking - ', RP.task1, '_v_', RP.task2, '::', UI.statistic_type.ui, RP.omnibus_str, '.\n']);
+                % fprintf(['Starting benchmarking - ', RP.task1, '_v_', RP.task2, '::',
+                % UI.statistic_type.ui, RP.omnibus_str, '.\n']);
                
                 %% Run NBS repetitions
                 
                 % Be careful with this parfor commented lol
-                parfor (i_rep=1: RP.n_repetitions)
+                % parfor (i_rep=1: RP.n_repetitions)
 
                 % Do not erase the comment bellow, it is used for debugging
                 % when running not in parallel 
-% disp('Parof');  for i_rep = 1:RP.n_repetitions
+disp('Parof');  for i_rep = 1:RP.n_repetitions
                     
                     % Encapsulation of the most computationally intensive loop
                     [FWER_rep, edge_stats_all_rep, pvals_all_rep, cluster_stats_all_rep, ...

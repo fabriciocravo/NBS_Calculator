@@ -23,14 +23,13 @@ clc;
 Params = setparams();
 Params.save_directory = [Params.save_directory, '/power_calculation/'];
 
-
 %% Create storage directory - only if it does not exist
 if ~exist(Params.save_directory, 'dir') % Check if the directory does not exist
     mkdir(Params.save_directory);       % Create the directory
 end
 
 if ~exist('RepData', 'var') || ~exist('GtData', 'var')
-    [GtData, RepData] = load_rep_and_gt_results();
+    [GtData, RepData] = load_rep_and_gt_results('gt_origin', Params.gt_origin);
 end 
 
 power_calculation_tprs = @(x) summarize_tprs('calculate_tpr', x, GtData, ...

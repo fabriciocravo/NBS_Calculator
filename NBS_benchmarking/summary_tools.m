@@ -152,7 +152,6 @@ function PowerRes = calculate_positives(rep_data)
           alpha = rep_data.meta_data.rep_parameters.pthresh_second_level;
       end
 
-
       PowerRes.positives=+(rep_data.brain_data.pvals_all<alpha);
       PowerRes.positives_neg=+(rep_data.brain_data.pvals_all_neg<alpha);
       PowerRes.positives_total=sum(PowerRes.positives,length(size(PowerRes.positives)));
@@ -223,7 +222,7 @@ function PowerRes = calculate_tpr(rep_data, gt_data, tpr_dthresh, PowerRes)
             ids_neg = ids_neg_vec;
             ids_zero = ids_zero_vec;
 
-        case 'whole_brain'
+        case 'wholebrain'
             % the Cohen's d-coefficient threshold doesn't directly translate to this multivariate effect size - 
             % treating all nonzero as non-null
             ids_pos_vec = gt_data.brain_data > 0;

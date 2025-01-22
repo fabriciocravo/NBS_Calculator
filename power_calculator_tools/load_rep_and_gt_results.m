@@ -1,25 +1,36 @@
-function [GtData, RepData] = load_rep_and_gt_results()
-
-    vars = who;       % Get a list of all variable names in the workspace
-    vars(strcmp(vars, 'RepData')) = [];  % Remove the variable you want to keep from the list
-    vars(strcmp(vars, 'GtData')) = [];
-    clear(vars{:});   % Clear all other variables
-    clc;
+function [GtData, RepData] = load_rep_and_gt_results(varargin)
     
+    %% Input Parsing section
+    p = inputParser;
+        
+    addOptional(p, 'gt_origin', 'effect_size');
+    addOptional(p, 'repetition_data', struct());
+    addOptional(p, 'gt_data', struct());
+    
+    parse(p, varargin{:});
+
+    gt_origin = p.Results.gt_origin;
+    RepData = p.Results.repetition_data;
+    GtData = p.Results.gt_data;
+
     Params = setparams();
 
     %% Get rep data
-    if ~exist('RepData', 'var')
+    if isempty(fieldnames(RepData))
         RepData = unite_results_from_directory('directory', Params.save_directory);
-    else
-        % disp('Data already loaded')
+        if isempty(fieldnames(RepData))
+            error('RepData was not load correctly')
+        end
     end
     
     %% Get GT data
-    if ~exist('GtData', 'var')
+    if isempty(fieldnames(GtData))
         GtData = load_gt_data('directory', Params.gt_data_dir);
+        if isempty(fieldnames(GtData))
+            error('GtData was not load correctly')
+        end
     end
-    
+
     %% Load gt data location in rep data
     RepData = l_dfs_add_gt_location(RepData, {}, RepData);
     
@@ -40,7 +51,7 @@ function [GtData, RepData] = load_rep_and_gt_results()
             if ~flag_meta && ~flag_brain
                 RepData = l_dfs_add_gt_location(node.(field_name), path_cell, RepData);
             elseif flag_meta
-                RepData = add_gt_location_to_rep_data(path_cell, RepData);
+                RepData = add_gt_location_to_rep_data(path_cell, RepData, gt_origin);
             end
             path_cell = path_cell(1:end-1);
         end

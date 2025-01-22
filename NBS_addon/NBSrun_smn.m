@@ -523,17 +523,18 @@ nbs.UI=UI;
 
 %Copy test statistics to NBS strucutre so that they can be displayed with
 %each link
-test_stat = zeros(2,DIMS.nodes*(DIMS.nodes-1)/2);
+
 if isempty(nbs.STATS.test_stat)
-    K=nbs.GLM.perms;
+    K = nbs.GLM.perms;
     %Temporarily set to 1 to save computation
-    nbs.GLM.perms=1;
-    test_stat=NBSglm(nbs.GLM);
+    nbs.GLM.perms = 1;
+    test_stat = NBSglm(nbs.GLM);
     %Set back to original value
-    nbs.GLM.perms=K;
+    nbs.GLM.perms = K;
 else
-    test_stat=nbs.STATS.test_stat(1,:);
+    test_stat = nbs.STATS.test_stat(1,:);
 end
+
 ind_upper=find(triu(ones(DIMS.nodes,DIMS.nodes),1));
 nbs.NBS.test_stat=zeros(nbs.STATS.N,nbs.STATS.N);
 nbs.NBS.test_stat(ind_upper)=test_stat(1,:); 

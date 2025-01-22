@@ -20,8 +20,27 @@ function [existence, full_file_path] = create_and_check_rep_file(data_dir, data_
                                 stat_type, omnibus_type, subject_number_str);
     end
 
+
     if ground_truth
-        rep_file_name = strcat('gt_', rep_file_name);
+        
+        switch stat_type
+
+            case 'Parametric_Bonferroni'
+                stat_level = 'edge';
+
+            case 'Constrained'
+                stat_level = 'network';
+
+            case 'Omnibus'
+                stat_level = 'wholebrain';
+
+            otherwise
+                error('Stat type not necessary for gt calculation')
+            
+        end
+
+        rep_file_name = sprintf('gt_%s_%s_%s_%s_%s.mat', data_set_name, test_components, test_type, ...
+                                 stat_level, omnibus_type);
     end
 
     % Create the full path to the file

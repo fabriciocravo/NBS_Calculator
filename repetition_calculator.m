@@ -71,7 +71,7 @@ Params.data_set = get_data_set_name(Dataset);
 [current_path,~,~] = fileparts(mfilename('fullpath')); % assuming NBS_benchmarking is current folder
 addpath(genpath(current_path));
 
-setup_parallel_workers(Params.parallel, Params.n_workers);
+% setup_parallel_workers(Params.parallel, Params.n_workers);
 
 OutcomeData = Dataset.outcome;
 BrainData = Dataset.brain_data;
@@ -100,7 +100,7 @@ for ti = 1:length(tests)
     RP = setup_parameters_for_rp(RP);
 
     run_benchmarking(RP, Y)
-
+    
     %if RP.testing == 1 && ti == 2
     %    return;
     %end

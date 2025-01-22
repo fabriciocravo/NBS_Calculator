@@ -59,7 +59,7 @@ if strcmp(GLM.test,'onesample')
     % Mean squared error
     mse = sum(resid.^2) / (GLM.n_observations - GLM.n_predictors); 
     % Compute the standard error using contrast
-    se = sqrt(mse .* (GLM.contrast * inv(GLM.X' * GLM.X) * GLM.contrast'));
+    se = sqrt(mse .* (GLM.contrast / (GLM.X' * GLM.X) * GLM.contrast'));
     % Compute the t-statistic
     test_stat(:) = (GLM.contrast * beta) ./ se;
 

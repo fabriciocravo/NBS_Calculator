@@ -14,7 +14,10 @@ addpath(genpath(RepParams.other_scripts_dir));
 % Developers: parameter changes
 if RepParams.testing
     RepParams.n_perms = RepParams.test_n_perms;
-    RepParams.n_repetitions = RepParams.test_n_repetitions;
+    % If gt always 1 rep
+    if ~RepParams.ground_truth
+        RepParams.n_repetitions = RepParams.test_n_repetitions;
+    end
     RepParams.n_workers = RepParams.test_n_workers;
 end
 
@@ -23,8 +26,8 @@ end
 % special setup for nonparametric FDR (part of classic NBS toolbox) and parametric FDR and Bonferroni (newly added here)  since can't run it using cluster_stat_type
 switch RepParams.cluster_stat_type
 
-    case 'FDR'
-        RepParams.nbs_method = 'Run FDR';
+    %case 'FDR'
+    %    RepParams.nbs_method = 'Run FDR';
     case 'Parametric_Bonferroni'
         RepParams.nbs_method = 'Run Parametric Edge-Level Correction';
     case 'Parametric_FDR'

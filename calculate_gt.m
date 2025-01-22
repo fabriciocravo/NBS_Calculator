@@ -34,12 +34,25 @@ end
 [current_path, ~, ~] = fileparts(mfilename('fullpath')); % assuming NBS_benchmarking is current folder
 addpath(genpath(current_path));
 
-%% Params set up 
+%% Prepare parameters and dataset
 Params = setparams();
-Params = setup_experiment_data(Params, Dataset);
-Params.data_set = data_set_name;
 
-setup_parallel_workers(Params.parallel, Params.n_workers);
+if ~exist('Dataset', 'var')
+    Dataset = load(Params.data_dir);
+else
+    % disp('Data already loaded')
+end
+
+%% Set n_nodes, n_var, n_repetitions 
+Params = setup_experiment_data(Params, Dataset);
+
+%% Create directory and get dataset name
+Params.save_directory = [Params.save_directory, 'ground_truth/'];
+Params = create_output_directory(Params);
+Params.data_set = get_data_set_name(Dataset);
+
+%% Paralle workers
+% setup_parallel_workers(Params.parallel, Params.n_workers);
 
 OutcomeData = Dataset.outcome;
 BrainData = Dataset.brain_data;
@@ -63,9 +76,10 @@ for ti = 1:length(tests)
     
     % Sets subject repetition to all subjects and others
     RP = setup_ground_truth_parameters(RP);
-    
-    run_benchmarking(RP, Y)
 
+    run_benchmarking(RP, Y)
+    
+    return;
     if RP.testing == 1 && ti == 2
         return;
     end

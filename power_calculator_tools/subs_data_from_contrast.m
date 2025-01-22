@@ -32,6 +32,10 @@ function [X, Y, RP] = subs_data_from_contrast(RP, contrast, BrainData)
     
             Y = Y_task - Y_rest;
 
+            RP.n_subs_1 = length(sub_ids);
+            RP.n_subs_2 = length(sub_ids);
+            RP.n_subs = length(sub_ids);
+
         case 't2'  
             
             % Use only subjects unique to each condition
@@ -63,6 +67,10 @@ function [X, Y, RP] = subs_data_from_contrast(RP, contrast, BrainData)
             X = zeros(n_subs_1 + n_subs_2, 2);
             X(1:n_subs_1, 1) = 1;               % Condition 1
             X(n_subs_1+1:n_subs_1+n_subs_2, 2) = 1; % Condition 2
+
+            RP.n_subs_1 = n_subs_1;
+            RP.n_subs_2 = n_subs_2;
+            RP.n_subs = length(xor_sub_ids);
         
         case 'pt'
 
@@ -91,12 +99,12 @@ function [X, Y, RP] = subs_data_from_contrast(RP, contrast, BrainData)
             Y_task = BrainData.(contrast{2}).data(:, sub_index_t2);  
     
             Y = [Y_task, Y_rest]; 
+
+            % Update subject counts
+            RP.n_subs_1 = n_subs;
+            RP.n_subs_2 = n_subs;
+            RP.n_subs = n_subs;
         
     end
-    
-    %% GET SUBJECT Numbers
-    RP.n_subs_1 = length(sub_ids_cond1);
-    RP.n_subs_2 = length(sub_ids_cond1);
-    RP.n_subs = length(sub_ids);
 
 end

@@ -1,5 +1,5 @@
 function ids_sampled = draw_repetition_ids(RP)
-    
+
     if RP.ground_truth
        ids_sampled(:, 1)= 1:RP.n_subs;
        return;

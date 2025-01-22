@@ -97,7 +97,15 @@ function [FWER_rep, edge_stats_rep, pvals_rep, cluster_stats_rep, ...
 
         cluster_stats_rep = full(nbs.NBS.cluster_stats);
         cluster_stats_rep_neg = full(nbs_neg.NBS.cluster_stats);
- 
+        
+        % Shape fine until here
     end
     
+    %% Fix shape when only 1 repetition
+    if RP.n_repetitions == 1
+        cluster_stats_rep = reshape(cluster_stats_rep, [], 1); % Ensures shape (55, 1)
+        cluster_stats_rep_neg = reshape(cluster_stats_rep_neg, [], 1);
+    end
+   
+
 end
