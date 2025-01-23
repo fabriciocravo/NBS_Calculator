@@ -4,7 +4,7 @@ function GtData = load_gt_data(varargin)
     p = inputParser;
 
     addParameter(p, 'directory', './power_calculator_results/ground_truth/', @ischar); % Default: 'default'
-    addParameter(p, 'gt_origin', 'effect_size');
+    addParameter(p, 'gt_origin', 'power_calculator');
 
     %% Get GT data files from directory 
     parse(p, varargin{:});
@@ -40,24 +40,31 @@ function GtData = load_gt_data(varargin)
         case 'power_calculator'  
 
             for i_f = 1:length(gt_files)
+                gt_file_name = gt_files{i_f}; % Get file
+                gt_absolute_file = [gt_dir, gt_file_name]; % Absolute path
 
-                gt_file_name = gt_files{i_f};
-                gt_absolute_file = [gt_dir, gt_file_name];
-
-                data = load(gt_absolute_file);
+                data = load(gt_absolute_file); % Load
                 
                 gt_data = data.brain_data;
                 meta_data = data.meta_data;
-
-                base_query_cell = gt_query_cell_generator(meta_data);
+                % The meta data is overriden multi-times depending on the
+                % experiment - it's not optimized, but it guarantess there
+                % will always be one meta-data
+                meta_data_reduced = transform_meta_data_in_gt(meta_data);
                 
-             
-                brain_data_query = [base_query_cell, {'brain_data'}];
-                meta_data_query = [base_query_cell, {'meta_data'}];
+                % Initial part of the struct query
+                base_query = gt_query_cell_generator(meta_data);
 
+                % Construct the query according to stat level and extract
+                % correct data
+                [brain_data_query, meta_data_query, stat_level] = ...
+                    power_calculator_query_constructor(base_query, meta_data); 
+                gt_data = get_data_from_level(gt_data, stat_level);
+              
+                
+                % Perform the queries
+                GtData = setfield(GtData, meta_data_query{:}, meta_data_reduced);
                 GtData = setfield(GtData, brain_data_query{:}, gt_data);
-                GtData = setfield(GtData, meta_data_query{:}, meta_data);
-
                 
             end    
     

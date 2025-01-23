@@ -222,7 +222,7 @@ function PowerRes = calculate_tpr(rep_data, gt_data, tpr_dthresh, PowerRes)
             ids_neg = ids_neg_vec;
             ids_zero = ids_zero_vec;
 
-        case 'wholebrain'
+        case 'whole_brain'
             % the Cohen's d-coefficient threshold doesn't directly translate to this multivariate effect size - 
             % treating all nonzero as non-null
             ids_pos_vec = gt_data.brain_data > 0;

@@ -85,8 +85,8 @@ for ti = 1:length(tests)
     RP = Params;
     
     %% FOR DEBUGING
-    %RP.all_cluster_stat_types = {'Constrained_FWER', 'Constrained'};
-    %disp('Debugging still here')
+    RP.all_cluster_stat_types = {'Size', 'TFCE'};
+    disp('Debugging still here')
 
     RP = infer_test_from_data(RP, OutcomeData.(t), BrainData);
     
@@ -101,6 +101,7 @@ for ti = 1:length(tests)
 
     run_benchmarking(RP, Y)
     
+    return;
     %if RP.testing == 1 && ti == 2
     %    return;
     %end

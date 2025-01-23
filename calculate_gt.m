@@ -52,7 +52,7 @@ Params = create_output_directory(Params);
 Params.data_set = get_data_set_name(Dataset);
 
 %% Paralle workers
-% setup_parallel_workers(Params.parallel, Params.n_workers);
+setup_parallel_workers(Params.parallel, Params.n_workers);
 
 OutcomeData = Dataset.outcome;
 BrainData = Dataset.brain_data;

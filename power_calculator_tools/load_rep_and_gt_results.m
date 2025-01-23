@@ -3,7 +3,7 @@ function [GtData, RepData] = load_rep_and_gt_results(varargin)
     %% Input Parsing section
     p = inputParser;
         
-    addOptional(p, 'gt_origin', 'effect_size');
+    addOptional(p, 'gt_origin', 'power_calculator');
     addOptional(p, 'repetition_data', struct());
     addOptional(p, 'gt_data', struct());
     
@@ -25,7 +25,7 @@ function [GtData, RepData] = load_rep_and_gt_results(varargin)
     
     %% Get GT data
     if isempty(fieldnames(GtData))
-        GtData = load_gt_data('directory', Params.gt_data_dir);
+        GtData = load_gt_data('directory', Params.gt_data_dir, 'gt_origin', gt_origin);
         if isempty(fieldnames(GtData))
             error('GtData was not load correctly')
         end

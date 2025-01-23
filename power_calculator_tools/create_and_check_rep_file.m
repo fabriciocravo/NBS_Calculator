@@ -12,13 +12,8 @@ function [existence, full_file_path] = create_and_check_rep_file(data_dir, data_
     end
 
     %% Make file name
-    if testing == 0
-        rep_file_name = sprintf('%s-%s-%s-%s-%s-%s.mat', data_set_name, test_components, test_type, ...
-                                stat_type, omnibus_type, subject_number_str);
-    else
-        rep_file_name = sprintf('%s-%s-%s-%s-%s-%s-test.mat', data_set_name, test_components, test_type, ...
-                                stat_type, omnibus_type, subject_number_str);
-    end
+    rep_file_name = sprintf('%s-%s-%s-%s-%s-%s.mat', data_set_name, test_components, test_type, ...
+                            stat_type, omnibus_type, subject_number_str);
 
 
     if ground_truth
@@ -32,15 +27,22 @@ function [existence, full_file_path] = create_and_check_rep_file(data_dir, data_
                 stat_level = 'network';
 
             case 'Omnibus'
-                stat_level = 'wholebrain';
+                stat_level = 'whole_brain';
 
             otherwise
                 error('Stat type not necessary for gt calculation')
             
         end
-
-        rep_file_name = sprintf('gt_%s_%s_%s_%s_%s.mat', data_set_name, test_components, test_type, ...
+        
+        
+        rep_file_name = sprintf('gt_%s_%s_%s_%s_%s', data_set_name, test_components, test_type, ...
                                  stat_level, omnibus_type);
+    end
+
+    if testing == 1
+        rep_file_name = strcat(rep_file_name, '_test.mat');
+    else
+        rep_file_name = strcat(rep_file_name, '.mat');
     end
 
     % Create the full path to the file

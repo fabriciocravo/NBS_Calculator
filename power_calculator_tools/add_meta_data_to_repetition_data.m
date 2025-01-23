@@ -17,7 +17,6 @@ function MetaData = add_meta_data_to_repetition_data(varargin)
     addParameter(p, 'date', NaN);
     addParameter(p, 'run_time', NaN, @isnumeric);
     addParameter(p, 'testing_code', true, @islogical);
-
     
     % Parse the inputs
     parse(p, varargin{:});   
