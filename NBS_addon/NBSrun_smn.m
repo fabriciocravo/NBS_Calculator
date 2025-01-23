@@ -351,6 +351,7 @@ if strcmp(nbs.STATS.statistic_type, 'Size') | strcmp(nbs.STATS.statistic_type, '
     end
 end
 
+
 %Omnibus type [required if statistic_type is Omnibus]
 if strcmp(nbs.STATS.statistic_type,'Omnibus')
     try 
@@ -370,6 +371,7 @@ if contains(nbs.STATS.statistic_type,'Constrained') || strcmp(nbs.STATS.statisti
     end 
 end
 
+%% IMPORTANT - WHY NOT CONSTRAINED_FWER ? 
 %Edge groups [required if using Constrained or Multidimensional_cNBS
 % if preaveraging, n_groups will be taken from data and no grouping file is required]
 if contains(nbs.STATS.statistic_type,'Constrained') || strcmp(nbs.STATS.statistic_type,'SEA') ...
@@ -383,7 +385,7 @@ if contains(nbs.STATS.statistic_type,'Constrained') || strcmp(nbs.STATS.statisti
     else
         % if not using preaveraged, load groups as usual
         try 
-            [nbs.STATS.edge_groups,UI.edge_groups.ok]=read_edge_groups(UI.edge_groups.ui,DIMS);
+            [nbs.STATS.edge_groups,UI.edge_groups.ok] = read_edge_groups(UI.edge_groups.ui,DIMS);
         catch 
             UI.edge_groups.ok=0;
         end
@@ -397,13 +399,13 @@ else
     end
 end
 
-%Number of nodes
+% Number of nodes
 nbs.STATS.N = DIMS.nodes; 
 
-%Do error checking on user inputs
+% Do error checking on user inputs
 [msg,stop] = errorcheck(UI,DIMS,S);
 
-%Attempt to print result of error checking to listbox. If this fails, print
+% Attempt to print result of error checking to listbox. If this fails, print
 % to screen
 try 
     tmp = get(S.OUT.ls,'string'); 
@@ -463,6 +465,7 @@ else
     catch;  fprintf([str,'\n']); end 
     nbs.STATS.test_stat=[]; 
 end
+
 
 %Do NBS
 if strcmp(UI.method.ui, 'Run NBS')
@@ -542,7 +545,6 @@ nbs.NBS.test_stat=nbs.NBS.test_stat+nbs.NBS.test_stat';
 
 %Display significant results with NBSview only if node coordinates provided
 if nbs.NBS.n>0 && UI.node_coor.ok && false
-
     NBSview(nbs.NBS); 
     str=[];
 elseif nbs.NBS.n>0 && ~UI.node_coor.ok

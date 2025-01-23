@@ -28,12 +28,9 @@ function Y_rep = apply_atlas_order(Y_rep, ...
                         
         % - reorder_matrix_by_atlas only applies to shen atlas
         % - full information before reordering
-        temp_y = zeros(size(mask));
-        temp_y(mask) = Y_rep(:, i);
-        % make full matrix, not upper or lower tri, before reordering
-        temp_y = temp_y + temp_y';
+        temp_y = unflatten_matrix(Y_rep(:, i), mask);
         temp_y = reorder_matrix_by_atlas(temp_y, mapping_category);
-        Y_rep(:, i) = temp_y(mask);
+        Y_rep(:, i) = flat_matrix(temp_y, mask);
 
     end
 

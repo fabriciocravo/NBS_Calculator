@@ -100,10 +100,10 @@ function run_benchmarking(RP, Y)
         
                 else
                     
-                    cluster_stats_all=zeros(RP.n_nodes, RP.n_nodes, RP.n_repetitions); 
-                    cluster_stats_all_neg=zeros(RP.n_nodes, RP.n_nodes, RP.n_repetitions); 
-                    pvals_all=zeros(RP.n_nodes*RP.n_nodes, RP.n_repetitions);
-                    pvals_all_neg=zeros(RP.n_nodes*RP.n_nodes, RP.n_repetitions);
+                    cluster_stats_all = zeros(RP.n_nodes, RP.n_nodes, RP.n_repetitions); 
+                    cluster_stats_all_neg = zeros(RP.n_nodes, RP.n_nodes, RP.n_repetitions); 
+                    pvals_all=zeros(RP.n_var, RP.n_repetitions);
+                    pvals_all_neg=zeros(RP.n_var, RP.n_repetitions);
         
                 end
                 

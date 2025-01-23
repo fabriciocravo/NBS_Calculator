@@ -40,6 +40,16 @@
     % - NBSglm_smn.m is using a simple average to calculate the t-test
     % statistics for the onesample case
     %
+    % - What is SEA and why is it mentioned in the code?
+    % - The same for 'Multidimensional_cNBS' 
+    % - Line 377 of NBSrun_smn.m - strcmp(nbs.STATS.statistic_type,'SEA')
+    % - Params.cluster_size_type - is it being used? 
+    % - bgl value?
+    % -  y_perm = GLM.y.*repmat(sign(rand(GLM.n_observations,1)-0.5),1,GLM.n_GLMs); 
+    % - Cluster-based - giving out the double of the p-values
+    % - NBSstats_smn - line 326 - switch case for size and tfce 
+    % - Equal to issue above - perform_correction 
+    %
     %% TODO
     % - shen atlas check 
 
@@ -71,7 +81,7 @@ Params.data_set = get_data_set_name(Dataset);
 [current_path,~,~] = fileparts(mfilename('fullpath')); % assuming NBS_benchmarking is current folder
 addpath(genpath(current_path));
 
-% setup_parallel_workers(Params.parallel, Params.n_workers);
+setup_parallel_workers(Params.parallel, Params.n_workers);
 
 OutcomeData = Dataset.outcome;
 BrainData = Dataset.brain_data;
@@ -85,7 +95,7 @@ for ti = 1:length(tests)
     RP = Params;
     
     %% FOR DEBUGING
-    RP.all_cluster_stat_types = {'Size', 'TFCE'};
+    RP.all_cluster_stat_types = {'Size'};
     disp('Debugging still here')
 
     RP = infer_test_from_data(RP, OutcomeData.(t), BrainData);

@@ -75,7 +75,7 @@ elseif nargin==3
 end
 
 %Is BGL available?
-if exist('components','file')==2
+if exist('components','file') == 2
     %Use components.m provided by MatlabBGL, otherwise use get_components.m
     bgl=1;
 else 
@@ -86,6 +86,7 @@ end
 Intensity = 0;
 
 % Convert from string to numeric type
+
 switch STATS.statistic_type
 
     case 'Size'
@@ -221,8 +222,6 @@ any_significant = any(pval(:) < STATS.alpha);
  % instead, we'll use the stats directly
 con_mat = 0;
 
-%error('Debug')
-
 end
 
 
@@ -253,7 +252,6 @@ function y_perm = permute_signal(GLM)
     %
     % SMN: all of these said "use the same permutation for every GLM" but I
     % don't think this is true... or I don't understand what they meant by this
-
     if strcmp(GLM.test,'onesample')
         do_sign_flip = 1;
     else
@@ -328,14 +326,14 @@ function [cluster_stats, null_stat] = get_cluster_stats(test_stat, STATS, ind_up
 switch STATS.statistic_type_numeric
     
     case 1 % do NBS +/- Intensity
-        
+        % - Is the error on the ind_upper ? Likely 
+
         % Index of edges exceeding the primary threshold
-        ind=ind_upper(test_stat>STATS.thresh);
-        adj=spalloc(N,N,length(ind)*2);
-        adj(ind)=1; adj=adj+adj';
+
+        adj = double(unflatten_matrix(test_stat > STATS.thresh, STATS.mask));
         
         % note: second argument saved for null stat is max cluster size
-        [cluster_stats,null_stat]=get_edge_components(adj,Intensity,test_stat,STATS.thresh,N,ind_upper,bgl);
+        [cluster_stats,null_stat] = get_edge_components(adj,Intensity,test_stat,STATS.thresh,N,ind_upper,bgl);
        
     case 2 % do TFCE
         
@@ -437,7 +435,6 @@ function [pval] = perform_correction(null_dist,target_stat,max_target_stat,do_pa
 % For multidimensional nulls (cNBS):
 %   1st level: get within-group (uncorrected) pvals - nonparametric
 %   2nd level: get cross-group FWER-corrected pvals - parametric or nonparametric
-    disp(STATS.statistic_type_numeric)
 
     switch STATS.statistic_type_numeric 
 
@@ -447,10 +444,12 @@ function [pval] = perform_correction(null_dist,target_stat,max_target_stat,do_pa
             % - TODO: return here, prob expensive to convert sparse to full
             % - TODO: this puts stuff back into a vector but we want it in the original matrix dim 
             % to match cluster outputs
-            [unique_stats,~,idx_unique_to_target_stat]=unique(target_stat);
-            unique_pvals=arrayfun(@(this_stat) sum(+(this_stat<null_dist))/K, full(unique_stats)); 
-            pval=unique_pvals(idx_unique_to_target_stat); 
             
+            % Make matrix flat again
+            flat_target_stat = flat_matrix(target_stat, STATS.mask);
+            % Calculate p-values directly for each element in flat_target_stat
+            pval = arrayfun(@(stat) sum(stat < null_dist) / K, flat_target_stat);
+
         case 2 % TFCE
             
             pval=arrayfun(@(this_stat) sum(+(this_stat<null_dist))/K, target_stat);
