@@ -12,7 +12,7 @@ function [existence, full_file_path] = create_and_check_rep_file(data_dir, data_
     end
 
     %% Make file name
-    rep_file_name = sprintf('%s-%s-%s-%s-%s-%s.mat', data_set_name, test_components, test_type, ...
+    rep_file_name = sprintf('%s-%s-%s-%s-%s-%s', data_set_name, test_components, test_type, ...
                             stat_type, omnibus_type, subject_number_str);
 
 

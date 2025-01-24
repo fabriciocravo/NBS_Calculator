@@ -157,7 +157,6 @@ function run_benchmarking(RP, Y)
                 
                 %% Save
                 
-                return; 
                 if false
                     if strcmp(UI.statistic_type.ui,'Size')
                         size_str = ['_',UI.size.ui];
